@@ -12,6 +12,8 @@
     "electron": "^14.0.1",
     "electron-builder": "^22.11.7",
     "electron-is-dev": "^2.0.0",
+    "framework7": "^6.3.4",
+    "framework7-react": "^6.3.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
