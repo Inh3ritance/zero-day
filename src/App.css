@@ -1,9 +1,11 @@
 .pane-group {
   background-color: #2D2D2D !important;
+  width: 100%;
 }
 
 .pane-sm, .sidebar {
   background-color: #2D2D2D !important;
+  width: 20%;
 }
 
 .media-body {
@@ -17,24 +19,63 @@
 .pane {
   background-color: #383838;
   border-left: none !important;
+  width: 80%;
 }
 
 .form-control {
   background-color: #383838 !important;
   border: 1px solid #1f1f1f !important;
+  color: white;
 }
 
 .message-bar-input {
-  width: 500px;
-  margin-left:2%;
+  width: 72%;
+  margin-left: 1%;
   bottom: 0px;
   margin-bottom: 8px;
   margin-top: 5px;
-  border-radius: 5%;
+}
+
+.message-bar-input[type = text] {
+  padding-left: 10px;
+  background-color: #383838 !important;
+  color: white;
+}
+
+.sidebarUserButton {
+  background: none;
 }
 
 .message-bar {
   width: 100%;
   position: fixed;
   bottom: 0px;
+}
+
+.chatBox {
+  min-height: 65px;
+  color: white;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+p, strong {
+  margin-left: 2%;
+}
+
+.sidebarUserButton {
+  width: 100%;
+}
+
+@media screen and (width < 550px) {
+  .sidebar {
+    display: none;
+  }
+
+  .pane {
+    width: 100%;
+  }
+
+  .message-bar-input {
+    width: 95%;
+  }
 }

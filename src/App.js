@@ -1,12 +1,69 @@
 import './App.css';
 import React from 'react';
 
-
 class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.head = this.head.bind();
+    this.state = {
+      friends: [
+        {
+          username: 'test1',
+          image: 'mksms.png',
+          lastMessage: 'lorem oskskkskksk',
+          hashKeyPattern: 'ghjhgjgjghj',
+          active: false,
+          newMessages: 0,
+        },
+        {
+          username: 'test2',
+          image: 'mksms.png',
+          lastMessage: 'hgjkgh oskskkskksk',
+          hashKeyPattern: 'ghjhgjgjghj',
+          active: false,
+          newMessages: 0,
+        }
+      ],
+      searchField: '',
+      selectedUser: '',
+      loadedMessages: [
+        {
+          user: 'rick',
+          message: 'ticky whoicky',
+          time: 'UTC'
+        },
+        {
+          user: 'rick',
+          message: 'schwonk',
+          time: '11pm'
+        },
+        {
+          user: 'Inhe',
+          message: 'test',
+          time: '4am'
+        },
+      ],
+    }
+    this.listContacts = this.listContacts.bind(this);
+    this.sidebar = this.sidebar.bind(this);
+    this.loadMessages = this.loadMessages.bind(this);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if(prevState.selectedUser !== this.state.selectedUser) {
+      this.loadMessages(this.state.selectedUser);
+    }
+  }
+
+  loadMessages() {
+    return this.state.loadedMessages.map((chat) => {
+      return (
+        <div className="chatBox">
+          <strong>{chat.user}</strong>
+          <p>{chat.message}</p>
+        </div>
+      );
+    });
   }
 
   head() {
@@ -17,41 +74,64 @@ class App extends React.Component {
     );
   }
 
+  sidebar() {
+    return(
+      <ul className="list-group">
+        <li className="list-group-header">
+          <input className="form-control" type="text" placeholder="Search for someone" onChange={(ev)=>this.setState({ searchField: ev.currentTarget.value })} />
+        </li>
+        <this.listContacts />
+      </ul>
+    )
+  }
+
+  listContacts() {
+    return this.state.friends.map((user) => {
+      if (this.state.searchField.length > 0 && user.username.toLowerCase().indexOf(this.state.searchField.toLowerCase()) !== -1) {
+        return(
+          <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username }) }>
+            <li className="list-group-item">
+              <img className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
+              <div className="media-body">
+                <strong>{user.username}</strong>
+                <p>{user.lastMessage}</p>
+              </div>
+            </li>
+          </button>
+        ); 
+      } else if (this.state.searchField.length <= 0) {
+        return(
+          <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username })}>
+            <li className="list-group-item">
+              <img className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
+              <div className="media-body">
+                <strong>{user.username}</strong>
+                <p>{user.lastMessage}</p>
+              </div>
+            </li>
+          </button>
+        ); 
+      }
+    });
+  }
+
   render() {
     return (
       <div class="window">
-        <this.head/>
-      <div className="window-content">
-      <div className="pane-group">
-        <div className="pane-sm sidebar">
-        <ul className="list-group">
-          <li className="list-group-header">
-            <input className="form-control" type="text" placeholder="Search for someone" />
-          </li>
-          <li className="list-group-item">
-            <img className="img-circle media-object pull-left" src="/assets/img/avatar.jpg" width="32" height="32" />
-            <div className="media-body">
-              <strong>List item title</strong>
-              <p>Lorem ipsum dolor sit amet.</p>
+        <this.head />
+        <div className="window-content">
+          <div className="pane-group">
+            <div className="pane-sm sidebar">
+              <this.sidebar />
             </div>
-          </li>
-          <li className="list-group-item">
-            <img className="img-circle media-object pull-left" src="/assets/img/avatar2.png" width="32" height="32" />
-            <div className="media-body">
-              <strong>List item title</strong>
-              <p>Lorem ipsum dolor sit amet.</p>
+            <div className="pane">
+              <this.loadMessages />
+              <div className="message-bar">
+                <input className="message-bar-input" type='text' placeholder='send a messsage' />
+              </div>
             </div>
-          </li>
-        </ul>
-        </div>
-        <div className="pane" >
-          <div className="message-bar">
-            <input className="message-bar-input" type='text' placeholder='send a messsage'>
-            </input>
           </div>
         </div>
-      </div>
-      </div>
       </div>
     );
   }
