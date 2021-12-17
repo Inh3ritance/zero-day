@@ -29,7 +29,7 @@ class App extends React.Component {
       loadedMessages: [
         {
           user: 'rick',
-          message: 'ticky whoicky',
+          message: 'ticky whoicky kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj',
           time: 'UTC'
         },
         {
@@ -59,8 +59,9 @@ class App extends React.Component {
     return this.state.loadedMessages.map((chat) => {
       return (
         <div className="chatBox">
-          <strong>{chat.user}</strong>
-          <p>{chat.message}</p>
+          <strong className="chat-username">{chat.user}</strong>
+          <p className="chat-message">{chat.message}</p>
+          <p className="chat-time">{chat.time}</p>
         </div>
       );
     });

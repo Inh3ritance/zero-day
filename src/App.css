@@ -53,9 +53,27 @@
 }
 
 .chatBox {
-  min-height: 65px;
+  min-height: 60px;
   color: white;
   border-bottom: 1px solid #1f1f1f;
+}
+
+.chatBox:hover {
+  background-color: #2c2b2b !important;
+}
+
+.chat-message {
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+.chat-time {
+  position: relative;
+  padding: 0px;
+  margin: 0px;
+  margin-left: 90%;
+  font-size: smaller;
+  bottom: 0px;
 }
 
 p, strong {
