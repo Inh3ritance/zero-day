@@ -1,4 +1,6 @@
 import React from 'react';
+import sha512 from 'crypto-js/sha512';
+import Xor from './Utility';
 import './Login.css';
 
 class Login extends React.Component {
@@ -10,6 +12,19 @@ class Login extends React.Component {
             key_code_2: null,
             key_code_3: null,
             key_code_4: null
+        }
+        this.submit = this.submit.bind(this);
+    }
+
+    submit(e) {
+        e.preventDefault();
+        if(window.localStorage.getItem('setPasscode')) {
+            // Login attempt -> llogin funcs
+        } else if(this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null) {
+            window.sessionStorage.setItem('sessionKey', sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`).toString());
+            window.localStorage.setItem('setPasscode', true);
+            window.localStorage.setItem('appKey', Xor(sha512(window.crypto.getRandomValues(new Uint32Array(1))[0].toString()).toString(), window.sessionStorage.getItem('sessionKey').toString()));
+            this.forceUpdate();
         }
     }
 
@@ -61,7 +76,7 @@ class Login extends React.Component {
                     <button className='dial-button' onClick={(e)=>{ this.registerKey(e) }}>9</button>
                     <button className='dial-button' onClick={(e)=>{ this.clearKeys(e) }} style={{backgroundColor:'red'}}>X</button>
                     <button className='dial-button' defaultValue={0} onClick={(e)=>{ this.registerKey(e) }}>0</button>
-                    <button className='dial-button' style={{backgroundColor:'green'}}>T</button>
+                    <button className='dial-button' onClick={(e) => { this.submit(e) }} style={{backgroundColor:'green'}}>T</button>
                 </div>
             </div>
         );

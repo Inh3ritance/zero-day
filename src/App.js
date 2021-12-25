@@ -1,5 +1,6 @@
 import './App.css';
 import React from 'react';
+import sha512 from 'crypto-js/sha512';
 
 class App extends React.Component {
 
@@ -118,7 +119,7 @@ class App extends React.Component {
 
   render() {
     return (
-      <div class="window">
+      <div className="window">
         <this.head />
         <div className="window-content">
           <div className="pane-group">
