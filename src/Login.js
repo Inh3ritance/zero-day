@@ -1,6 +1,6 @@
 import React from 'react';
 import sha512 from 'crypto-js/sha512';
-import Xor from './Utility';
+import { Xor, Rounds } from './Utility';
 import './Login.css';
 
 class Login extends React.Component {
@@ -19,11 +19,19 @@ class Login extends React.Component {
     submit(e) {
         e.preventDefault();
         if(window.localStorage.getItem('setPasscode')) {
-            // Login attempt -> llogin funcs
+            let key = Xor(window.sessionStorage.getItem('sessionKey'), window.localStorage.getItem('appKey'));
+            const firstRound = Rounds(key, 1);
+
         } else if(this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null) {
             window.sessionStorage.setItem('sessionKey', sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`).toString());
             window.localStorage.setItem('setPasscode', true);
-            window.localStorage.setItem('appKey', Xor(sha512(window.crypto.getRandomValues(new Uint32Array(1))[0].toString()).toString(), window.sessionStorage.getItem('sessionKey').toString()));
+            let key = Xor(sha512(window.crypto.getRandomValues(new Uint32Array(1))[0].toString()).toString(), window.sessionStorage.getItem('sessionKey').toString());
+            window.localStorage.setItem('appKey', key);
+            const firstRound = Rounds(key, 1);
+            let verify = JSON.stringify({
+                verify: true,
+            });
+            
             this.forceUpdate();
         }
     }
@@ -57,8 +65,9 @@ class Login extends React.Component {
     render () {
         return(
             <div className='login-screen'>
+                <h1>Zero Day Messaging</h1>
                 <label className='login-label'>Enter Passcode:</label>
-                <div className="input-scores">
+                <div className='input-scores'>
                     <h2 className='input-bar'>{this.state.key_code_1 === null ? '_' : '*' }</h2>
                     <h2 className='input-bar'>{this.state.key_code_2 === null ? '_' : '*' }</h2>
                     <h2 className='input-bar'>{this.state.key_code_3 === null ? '_' : '*' }</h2>

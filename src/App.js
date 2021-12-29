@@ -70,8 +70,8 @@ class App extends React.Component {
 
   head() {
     return(
-      <header className="toolbar toolbar-header">
-        <h1 className="title">We do not listen, we do not hear.</h1>
+      <header className='toolbar toolbar-header'>
+        <h1 className='title'>We do not listen, we do not hear.</h1>
       </header>
     );
   }
@@ -93,7 +93,7 @@ class App extends React.Component {
         return(
           <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username }) }>
             <li className="list-group-item">
-              <img className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
+              <img alt={'user'} className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
               <div className="media-body">
                 <strong>{user.username}</strong>
                 <p>{user.lastMessage}</p>
@@ -105,7 +105,7 @@ class App extends React.Component {
         return(
           <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username })}>
             <li className="list-group-item">
-              <img className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
+              <img alt={'user'} className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
               <div className="media-body">
                 <strong>{user.username}</strong>
                 <p>{user.lastMessage}</p>
@@ -113,6 +113,8 @@ class App extends React.Component {
             </li>
           </button>
         ); 
+      } else {
+        return null;
       }
     });
   }
@@ -125,6 +127,7 @@ class App extends React.Component {
           <div className="pane-group">
             <div className="pane-sm sidebar">
               <this.sidebar />
+              <button className='addUser'>+</button>
             </div>
             <div className="pane">
               <this.loadMessages />

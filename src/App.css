@@ -84,6 +84,18 @@ p, strong {
   width: 100%;
 }
 
+.addUser {
+  margin-top: 5%;
+  background: none;
+  border-radius: 50%;
+  width: 40px;
+  position: relative;
+  left: 35%;
+  font-size: large;
+  height: 40px;
+  color: white;
+}
+
 @media screen and (width < 550px) {
   .sidebar {
     display: none;
