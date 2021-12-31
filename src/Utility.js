@@ -6,15 +6,16 @@ export const Xor = (a, b) => {
     for(let i = 0; i < a.length; i++) {
       result += String.fromCharCode(parseInt(a.charCodeAt(i) ^ b.charCodeAt(i)));
     }
-    return result;
+    return result.toString();
 }
 
+// think about this...
 export const Rounds = (str, num) => {
   if(num <= 0) return str;
   let rounds = str;
   let i = 0;
   while(i < num) {
-    rounds = sha512(rounds, num);
+    rounds = sha512(rounds).toString();
     i++;
   }
   return rounds;
@@ -26,13 +27,11 @@ export const NextRound = (str) => {
 
 export const ConformPlainText = (pt) => {
   let str = pt;
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   str += "/[EXT:";
-  if(str % 128 !== 0) {
-    while(str % 126 !== 0) {
-      str += "";
-    }
-    str += "]/";
-  } else {
-    return "Extension";
+  while(str.length % 126 !== 0) {
+    str += characters.charAt(Math.floor(Math.random() * characters.length));
   }
+  str += "]/";
+  return str;
 }

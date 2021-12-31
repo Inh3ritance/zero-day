@@ -1,14 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import PageHandler from './pageHandler';
 import './index.css';
-import App from './App';
-import Login from './Login';
 import reportWebVitals from './reportWebVitals';
 import './css/photon.css';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Login />
+    <PageHandler />
   </React.StrictMode>,
   document.getElementById('root')
 );
