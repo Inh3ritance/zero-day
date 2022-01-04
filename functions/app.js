@@ -1,13 +1,20 @@
 const express = require('express');
 const http = require('http');
+const socket = require('socket.io');
 const app = express();
 const server = http.createServer(app);
-const socket = require('socket.io');
-const io = socket(server);
+const io = socket(server, {
+    cors: {
+        origin: '*',
+    }
+});
 
 app.get('/',(_, res) => res.send('Server running...'));
 
 io.on('connection', (socket) => {
+    socket.on('room', (room) => {
+        socket.join(room);
+    })
     socket.on('send message', ({ content, to, sender, chatName, isChannel }) => {
         if(isChannel) {
             const payload = {

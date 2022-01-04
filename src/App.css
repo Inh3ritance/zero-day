@@ -16,6 +16,14 @@
   border-bottom: 1px solid #1f1f1f;
 }
 
+.logo-image {
+  height: 400px;
+  width: 100%;
+  text-align: center;
+  margin: auto;
+  position: relative;
+}
+
 .pane {
   background-color: #383838;
   border-left: none !important;
@@ -29,11 +37,12 @@
 }
 
 .message-bar-input {
-  width: 72%;
+  width: 70%;
   margin-left: 1%;
   bottom: 0px;
   margin-bottom: 8px;
   margin-top: 5px;
+  position: fixed;
 }
 
 .message-bar-input[type = text] {
@@ -42,14 +51,14 @@
   color: white;
 }
 
-.sidebarUserButton {
-  background: none;
-}
-
 .message-bar {
   width: 100%;
-  position: fixed;
+  background-color: #2a2a2a;
   bottom: 0px;
+}
+
+#last-message {
+  margin-bottom: 10%;
 }
 
 .chatBox {
@@ -81,7 +90,11 @@ p, strong {
 }
 
 .sidebarUserButton {
-  width: 100%;
+  width: 95%;
+  background: none;
+  position: relative;
+  transform: translateX(2.5%);
+  -ms-transform: translateY(2.5%);
 }
 
 .addUser {
@@ -94,6 +107,35 @@ p, strong {
   font-size: large;
   height: 40px;
   color: white;
+}
+
+.modal {
+  width: 80%;
+  margin: auto;
+  background-color: rgb(26, 26, 26);
+  border-radius: 10px;
+}
+
+.close {
+  cursor: pointer;
+  position: relative;
+  display: block;
+  padding: 2px 5px;
+  line-height: 20px;
+  right: 10px;
+  top: -10px;
+  font-size: 24px;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #cfcece;
+}
+
+.addUserInput {
+  width: 90%;
+  transform: translateX(5%);
+  -ms-transform: translateY(5%);
+  padding: 2%;
+  margin-bottom: 5%;
 }
 
 @media screen and (width < 550px) {
