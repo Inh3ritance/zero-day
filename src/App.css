@@ -103,17 +103,17 @@ p, strong {
   border-radius: 50%;
   width: 40px;
   position: relative;
-  left: 35%;
+  left: 40%;
   font-size: large;
   height: 40px;
   color: white;
 }
 
 .modal {
-  width: 80%;
   margin: auto;
   background-color: rgb(26, 26, 26);
   border-radius: 10px;
+  border: 2px solid rgb(35, 32, 53);
 }
 
 .close {
@@ -127,15 +127,41 @@ p, strong {
   font-size: 24px;
   background: #ffffff;
   border-radius: 18px;
-  border: 1px solid #cfcece;
+  border: 2px solid #cfcece;
 }
 
 .addUserInput {
   width: 90%;
   transform: translateX(5%);
-  -ms-transform: translateY(5%);
+  -ms-transform: translateX(5%);
   padding: 2%;
   margin-bottom: 5%;
+}
+
+#addUserSubmit {
+  text-align: center;
+  width: 40%;
+  transform: translateX(75%);
+  -ms-transform: translateX(75%);
+  margin-bottom: 5%;
+}
+
+.mobileSideBar {
+  width: 200px;
+  height: 100%;
+  background-color: #1f1f1f;
+}
+
+.sidebarButton {
+  position: fixed;
+  top: 25px;
+  background-color: #1f1f1f;
+  text-align: center;
+  color: white;
+  border: none;
+  z-index: 1;
+  width: 25px;
+  height: 25px;
 }
 
 @media screen and (width < 550px) {
@@ -149,5 +175,11 @@ p, strong {
 
   .message-bar-input {
     width: 95%;
+  }
+}
+
+@media screen and (width > 550px) {
+  .hidden {
+    display: none;
   }
 }

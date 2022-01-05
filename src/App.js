@@ -2,6 +2,7 @@ import './App.css';
 import React from 'react';
 import socket from 'socket.io-client';
 import { Xor, Rounds } from './Utility';
+import Sidebar from "react-sidebar";
 import sha512 from 'crypto-js/sha512';
 import Popup from 'reactjs-popup';
 import Logo from './logo.svg';
@@ -52,12 +53,14 @@ class App extends React.Component {
       ],
       username: 'null',
       hash: 'null',
+      sidebar: false,
     }
     this.listContacts = this.listContacts.bind(this);
     this.getUserInfo = this.getUserInfo.bind(this);
     this.sidebar = this.sidebar.bind(this);
     this.loadMessages = this.loadMessages.bind(this);
     this.addChatInfo = this.addChatInfo.bind(this);
+    this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
 
   componentDidMount() {
@@ -159,7 +162,7 @@ class App extends React.Component {
     return this.state.friends.map((user) => {
       if (this.state.searchField.length > 0 && user.username.toLowerCase().indexOf(this.state.searchField.toLowerCase()) !== -1) {
         return(
-          <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username }) }>
+          <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username, sidebar: false }) }>
             <li className="list-group-item">
               <img alt={'user'} className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
               <div className="media-body">
@@ -171,7 +174,7 @@ class App extends React.Component {
         ); 
       } else if (this.state.searchField.length <= 0) {
         return(
-          <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username })}>
+          <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username, sidebar: false })}>
             <li className="list-group-item">
               <img alt={'user'} className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
               <div className="media-body">
@@ -196,31 +199,53 @@ class App extends React.Component {
     );
   }
 
+  onSetSidebarOpen(open) {
+    this.setState({ sidebar: open });
+  }
+
+  sidebarNav() {
+    return(
+      <div>
+        <this.sidebar />
+        <Popup modal position={'center'} trigger={<button className='addUser'>+</button>}>
+        {
+          close => (
+            <div className="modal">
+              <button className="close" onClick={close}>&times;</button>
+              <h3 style={{ color: 'white', textAlign:'center', borderBottom: '1px solid gray', width: '90%', margin:'auto'}}> Create/Join Chatroom </h3>
+                <div className="content">
+                  <input className='addUserInput' type={'text'} placeholder='secret key'></input>
+                  <input className='addUserInput' type={'text'} placeholder='chatroom #'></input>
+                  <button id='addUserSubmit' onClick={()=>console.log('')}>Submit</button>
+                </div>      
+          </div>    
+          )
+        }
+        </Popup>
+      </div>
+    );
+  }
+
   render() {
     return (
       <div className="window">
         <this.head />
         <div className="window-content">
           <div className="pane-group">
+            <div className='hidden'>
+              <Sidebar 
+                sidebar={<div className={'mobileSideBar'}>{this.sidebarNav()}</div>}
+                open={this.state.sidebar}
+                onSetOpen={this.onSetSidebarOpen}
+              />
+            </div>
             <div className="pane-sm sidebar">
-              <this.sidebar />
-              <Popup modal position={'center'} trigger={<button className='addUser'>+</button>}>
               {
-                close => (
-                  <div className="modal">
-                    <button className="close" onClick={close}>&times;</button>
-                    <h3 style={{ color: 'white', textAlign:'center', borderBottom: '1px solid gray', width: '90%', margin:'auto'}}> Create/Join Chatroom </h3>
-                      <div className="content">
-                        <input className='addUserInput' type={'text'} placeholder='secret key'></input>
-                        <input className='addUserInput' type={'text'} placeholder='chatroom #'></input>
-                        <button onClick={()=>console.log('')}>Submit</button>
-                      </div>      
-                </div>    
-                )
+                this.sidebarNav()
               }
-              </Popup>
             </div>
             <div className="pane">
+              <button className='hidden sidebarButton' onClick={() => this.onSetSidebarOpen(true)}>&#9660;</button>
               <this.logoIntro />
               <this.loadMessages />
               <div className="message-bar">
