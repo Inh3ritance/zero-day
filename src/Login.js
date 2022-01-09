@@ -4,6 +4,8 @@ import { Xor, Rounds, ConformPlainText } from './Utility';
 import './Login.css';
 import faker from 'faker';
 
+const url = 'http://localhost:9000';
+
 class Login extends React.Component {
 
     constructor(props) {
@@ -74,22 +76,38 @@ class Login extends React.Component {
                     key_code_4: null
                 });
             }
-        } else if(this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null && this.state.username.length > 0) {
+        } else if(this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null && this.state.username.length > 3) {
             const sessionKey = sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`).toString();
             const csrng = sha512(window.crypto.getRandomValues(new Uint32Array(1))[0].toString()).toString();
             let key = Xor(csrng, sessionKey);
             const firstRound = Rounds(csrng, 1); // our rounds are based off the unencrypeted csrng key
-            window.sessionStorage.setItem('sessionKey', sessionKey);
-            window.localStorage.setItem('setPasscode', true);
-            window.localStorage.setItem('appKey', key);
+            const hash = window.crypto.getRandomValues(new Uint32Array(this.state.username.length + 1))[0].toString().substring(0,5);
             let verify = JSON.stringify({
                 verify: true,
                 username: this.state.username,
-                hash: window.crypto.getRandomValues(new Uint32Array(this.state.username.length + 1))[0].toString().substring(0,5),
+                hash,
             });
-            let conformText = ConformPlainText(verify);
-            window.localStorage.setItem('verify', Xor(firstRound, conformText));
-            this.Approve(true);
+            const conformText = ConformPlainText(verify);
+            const hashedUser = Xor(firstRound, conformText);
+            console.log(sha512(`${this.state.username}#${hash}`).toString());
+            fetch(`${url}/createUser`, {
+                method: "POST",
+                body: JSON.stringify({
+                    user: sha512(`${this.state.username}#${hash}`).toString(),
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8"
+                }
+            }).then(_ => {
+                window.sessionStorage.setItem('sessionKey', sessionKey);
+                window.localStorage.setItem('setPasscode', true);
+                window.localStorage.setItem('appKey', key);
+                window.localStorage.setItem('verify', hashedUser);
+                this.Approve(true);
+            }).catch((err) => {
+                console.log(err);
+                // username taken
+            });
         } else {
             this.setState({
                 key_code_1: null,

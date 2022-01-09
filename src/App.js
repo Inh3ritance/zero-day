@@ -1,8 +1,8 @@
 import './App.css';
 import React from 'react';
-import socket from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { Xor, Rounds } from './Utility';
-import Sidebar from "react-sidebar";
+import Sidebar from 'react-sidebar';
 import sha512 from 'crypto-js/sha512';
 import Popup from 'reactjs-popup';
 import Logo from './logo.svg';
@@ -51,9 +51,10 @@ class App extends React.Component {
           time: '4am'
         },
       ],
-      username: 'null',
-      hash: 'null',
+      username: null,
+      hash: null,
       sidebar: false,
+      socket: null,
     }
     this.listContacts = this.listContacts.bind(this);
     this.getUserInfo = this.getUserInfo.bind(this);
@@ -63,13 +64,13 @@ class App extends React.Component {
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
 
-  componentDidMount() {
-    this.getUserInfo();
-    const io = socket().io;
-    io.connect(url);
-    io.on('connect', () => {
-      console.log('connected to server');
-    })
+  async componentDidMount() {
+    await this.getUserInfo();
+    const socket = io(url);
+    socket.emit('login', { user: sha512(`${this.state.username}#${this.state.hash}`).toString() });
+    socket.on('updateSocket', (data) => {
+      this.setState({ socket: data.socket });
+    });
     /*if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
       let db = indexedDB.open('users').result;
       let data = {
@@ -84,7 +85,7 @@ class App extends React.Component {
     }*/
   }
 
-  getUserInfo() {
+  async getUserInfo() {
     const sessionKey = window.sessionStorage.getItem('sessionKey').toString();
     const appKey = window.localStorage.getItem('appKey').toString();
     const verifyKey = window.localStorage.getItem('verify').toString();
@@ -97,7 +98,7 @@ class App extends React.Component {
         this.setState({
           username: verify.username,
           hash: verify.hash,
-        })
+        });
     } catch(err) {
         console.log(err);
     }
@@ -144,8 +145,9 @@ class App extends React.Component {
       <ul className="list-group">
         <li className="list-group-header">
           <div>
-            <img className="img-circle media-object" alt={'user'} src={''} width={'32px'} height={'32px'} style={{ margin: 'auto', display:'block' }}></img>
+            <img className="img-circle media-object activeUser" alt={'user'} src={''} width={'50px'} height={'50px'} style={{ margin: 'auto', display:'block', textAlign: 'center' }}></img>
             <h5 style={{textAlign: 'center', color: 'white', marginTop: '7px', marginBottom: '7px'}}>{this.state.username}#{this.state.hash}</h5>
+            <h5 style={{textAlign: 'center', color: 'white', marginTop: '7px', marginBottom: '7px'}}>socket#: {this.state.socket}</h5>
           </div>
           <input className="form-control" type="text" placeholder="Search for someone" onChange={(ev)=>this.setState({ searchField: ev.currentTarget.value })} />
         </li>
@@ -164,7 +166,7 @@ class App extends React.Component {
         return(
           <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username, sidebar: false }) }>
             <li className="list-group-item">
-              <img alt={'user'} className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
+              <img alt={'user'} className="img-circle media-object pull-left inActiveUser" src={user.image} width="50px" height="50px" />
               <div className="media-body">
                 <strong>{user.username}</strong>
                 <p>{user.lastMessage}</p>
@@ -176,7 +178,7 @@ class App extends React.Component {
         return(
           <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: user.username, sidebar: false })}>
             <li className="list-group-item">
-              <img alt={'user'} className="img-circle media-object pull-left" src={user.image} width="32" height="32" />
+              <img alt={'user'} className="img-circle media-object pull-left inActiveUser" src={user.image} width="50px" height="50px" />
               <div className="media-body">
                 <strong>{user.username}</strong>
                 <p>{user.lastMessage}</p>
@@ -245,7 +247,7 @@ class App extends React.Component {
               }
             </div>
             <div className="pane">
-              <button className='hidden sidebarButton' onClick={() => this.onSetSidebarOpen(true)}>&#9660;</button>
+              <button className='hidden sidebarButton' onClick={() => this.onSetSidebarOpen(true)}>+</button>
               <this.logoIntro />
               <this.loadMessages />
               <div className="message-bar">

@@ -5,10 +5,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@socket.io/admin-ui": "^0.2.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "concurrently": "^6.2.1",
+    "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
     "electron": "^14.0.1",
     "electron-builder": "^22.11.7",
@@ -18,6 +20,7 @@
     "framework7": "^6.3.4",
     "framework7-react": "^6.3.4",
     "http": "0.0.1-security",
+    "nedb": "git+https://github.com/Inh3ritance/nedb.git",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
@@ -34,7 +37,8 @@
     "ebuild": "npm run build && node_modules/.bin/build",
     "dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "node ./functions/app.js"
   },
   "eslintConfig": {
     "extends": [
