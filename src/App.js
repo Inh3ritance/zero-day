@@ -37,7 +37,7 @@ class App extends React.Component {
       loadedMessages: [
         {
           user: 'rick',
-          message: 'ticky whoicky kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj',
+          message: 'ticky whoicky kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj',
           time: 'UTC'
         },
         {
@@ -67,7 +67,8 @@ class App extends React.Component {
   async componentDidMount() {
     await this.getUserInfo();
     const socket = io(url);
-    socket.emit('login', { user: sha512(`${this.state.username}#${this.state.hash}`).toString() });
+    console.log(this.state.hash);
+    socket.emit('login', { user: this.state.username, pass: this.state.hash });
     socket.on('updateSocket', (data) => {
       this.setState({ socket: data.socket });
     });
@@ -115,17 +116,23 @@ class App extends React.Component {
       if(index === arr.length - 1) {
         return (
           <div className="chatBox" id='last-message'>
-            <strong className="chat-username">{chat.user}</strong>
-            <p className="chat-message">{chat.message}</p>
-            <p className="chat-time">{chat.time}</p>
+            <img className="img-circle media-object" alt={'user'} src={''} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
+            <div style={{width:'85%', display: 'inline-block', marginLeft: '5px'}}>
+              <p className="chat-username">{chat.user}</p>
+              <p className="chat-message">{chat.message}</p>
+              <p className="chat-time">{chat.time}</p>
+            </div>
           </div>
         );
       } else {
         return (
           <div className="chatBox">
-            <strong className="chat-username">{chat.user}</strong>
-            <p className="chat-message">{chat.message}</p>
-            <p className="chat-time">{chat.time}</p>
+            <img className="img-circle media-object" alt={'user'} src={''} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
+            <div style={{width:'85%', display: 'inline-block', marginLeft: '5px'}}>
+            <p className="chat-username">{chat.user}</p>
+              <p className="chat-message">{chat.message}</p>
+              <p className="chat-time">{chat.time}</p>
+            </div>
           </div>
         );
       }
@@ -146,12 +153,14 @@ class App extends React.Component {
         <li className="list-group-header">
           <div>
             <img className="img-circle media-object activeUser" alt={'user'} src={''} width={'50px'} height={'50px'} style={{ margin: 'auto', display:'block', textAlign: 'center' }}></img>
-            <h5 style={{textAlign: 'center', color: 'white', marginTop: '7px', marginBottom: '7px'}}>{this.state.username}#{this.state.hash}</h5>
+            <h5 style={{textAlign: 'center', color: 'white', marginTop: '7px', marginBottom: '7px'}}>{this.state.username}</h5>
             <h5 style={{textAlign: 'center', color: 'white', marginTop: '7px', marginBottom: '7px'}}>socket#: {this.state.socket}</h5>
           </div>
           <input className="form-control" type="text" placeholder="Search for someone" onChange={(ev)=>this.setState({ searchField: ev.currentTarget.value })} />
         </li>
+        <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Direct messages</h4>
         <this.listContacts />
+        <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Group chats</h4>
       </ul>
     )
   }
@@ -194,7 +203,7 @@ class App extends React.Component {
 
   logoIntro() {
     return (
-      <div style={{borderBottom: '1px solid #1f1f1f'}}>
+      <div style={{borderBottom: '1px solid #464646', width: '97%', margin: 'auto'}}>
         <img alt={'Logo'} src={Logo} className={'logo-image'}></img>
         <h3 style={{ color: 'white', textAlign:'center', marginBottom: '2%'}}>Secrecy begins here...</h3>
       </div>

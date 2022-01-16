@@ -51,10 +51,12 @@
   color: white;
 }
 
-.message-bar {
+.message-bar { /**/
   width: 100%;
-  background-color: #2a2a2a;
+  height: 35px;
+  position: sticky;
   bottom: 0px;
+  background-color: #383838;
 }
 
 #last-message {
@@ -62,17 +64,25 @@
 }
 
 .chatBox {
-  min-height: 60px;
+  min-height: 80px;
   color: white;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid #464646;
+  width: 97%;
+  margin: auto;
 }
 
 .chatBox:hover {
   background-color: #2c2b2b !important;
 }
 
+.chat-username {
+  margin-top: 3px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
 .chat-message {
-  margin-top: 5px;
+  margin-top: 0px;
   margin-bottom: 0px;
 }
 
@@ -80,8 +90,9 @@
   position: relative;
   padding: 0px;
   margin: 0px;
-  margin-left: 90%;
+  margin-bottom:10px;
   font-size: smaller;
+  float: right;
   bottom: 0px;
 }
 
@@ -92,9 +103,15 @@ p, strong {
 .sidebarUserButton {
   width: 95%;
   background: none;
+  background-color: #2e2e2e;
+  border:1px solid rgb(165, 165, 165);
   position: relative;
   transform: translateX(2.5%);
   -ms-transform: translateY(2.5%);
+}
+
+.sidebarUserButton:hover {
+  background-color: #272727;
 }
 
 .addUser {
@@ -112,8 +129,8 @@ p, strong {
 .modal {
   margin: auto;
   background-color: rgb(26, 26, 26);
-  border-radius: 10px;
-  border: 2px solid rgb(35, 32, 53);
+  border-radius: 3px;
+  border: 2px solid rgb(47, 47, 47);
 }
 
 .close {

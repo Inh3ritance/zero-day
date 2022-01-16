@@ -81,19 +81,19 @@ class Login extends React.Component {
             const csrng = sha512(window.crypto.getRandomValues(new Uint32Array(1))[0].toString()).toString();
             let key = Xor(csrng, sessionKey);
             const firstRound = Rounds(csrng, 1); // our rounds are based off the unencrypeted csrng key
-            const hash = window.crypto.getRandomValues(new Uint32Array(this.state.username.length + 1))[0].toString().substring(0,5);
+            const hash = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
             let verify = JSON.stringify({
                 verify: true,
-                username: this.state.username,
+                username: `${this.state.username}#${hash.substring(0,5)}`,
                 hash,
             });
             const conformText = ConformPlainText(verify);
             const hashedUser = Xor(firstRound, conformText);
-            console.log(sha512(`${this.state.username}#${hash}`).toString());
             fetch(`${url}/createUser`, {
                 method: "POST",
                 body: JSON.stringify({
-                    user: sha512(`${this.state.username}#${hash}`).toString(),
+                    user: `${this.state.username}#${hash.substring(0,5)}`,
+                    pass: hash,
                 }),
                 headers: {
                     "Content-type": "application/json; charset=UTF-8"
