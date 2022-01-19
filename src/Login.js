@@ -21,6 +21,7 @@ class Login extends React.Component {
         this.Approve = this.Approve.bind(this);
     }
 
+    // Determine whether a encryption token exists
     componentDidMount() {
         if(window.sessionStorage.getItem('sessionKey') && window.localStorage.getItem('setPasscode')) {
             const sessionKey = window.sessionStorage.getItem('sessionKey').toString();
@@ -47,10 +48,12 @@ class Login extends React.Component {
         }
     }
 
+    // pass state up
     Approve(flag) {
         this.props.Approval(flag);
     }
 
+    // submit 4 keys and generate encryption tokens || verify existing encryption token
     submit(e) {
         e.preventDefault();
         if(window.localStorage.getItem('setPasscode') && this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null) {
@@ -118,6 +121,7 @@ class Login extends React.Component {
         }
     }
 
+    // Determine position of key
     registerKey(e) {
         e.preventDefault();
         if(this.state.key_code_4 === null) {
@@ -134,6 +138,7 @@ class Login extends React.Component {
         }
     }
 
+    // clears keys
     clearKeys(e) {
         e.preventDefault();
         this.setState({

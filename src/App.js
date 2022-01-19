@@ -64,6 +64,7 @@ class App extends React.Component {
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
 
+  // get userinfo and connect to socket.io
   async componentDidMount() {
     await this.getUserInfo();
     const socket = io(url);
@@ -86,6 +87,7 @@ class App extends React.Component {
     }*/
   }
 
+  // decrypt key w/sessionkey get user data(JSON)
   async getUserInfo() {
     const sessionKey = window.sessionStorage.getItem('sessionKey').toString();
     const appKey = window.localStorage.getItem('appKey').toString();

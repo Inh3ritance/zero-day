@@ -1,5 +1,9 @@
 import sha512 from 'crypto-js/sha512';
+const crypto = require('crypto');
 
+console.log(crypto);
+
+// XOR to strings of equal length
 export const Xor = (a, b) => {
     let result = '';
     if(a.length !== b.length) return result;
@@ -21,10 +25,12 @@ export const Rounds = (str, num) => {
   return rounds;
 }
 
+// gets next sha512 round
 export const NextRound = (str) => {
   return sha512(str);
 }
 
+// Padding for plaintext
 export const ConformPlainText = (pt) => {
   let str = pt;
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
