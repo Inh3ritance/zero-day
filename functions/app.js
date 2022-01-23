@@ -8,6 +8,7 @@ const Datastore = require('nedb');
 const { instrument } = require('@socket.io/admin-ui');
 const sha512 = require('crypto-js/sha512');
 const helmet = require('helmet');
+const { v4: uuidv4 } = require('uuid')
 let db = new Datastore();
 
 /// create cron job everyday(1 day) for inactive 60 day deletion
@@ -105,8 +106,13 @@ io.on('connection', (socket) => {
     });
 
     // not encrypted, on public chat
-    socket.on('public', (data) => {
-        socket.broadcast.emit(data);
+    socket.on('public-send', (data) => {
+        const year = new Date().getUTCFullYear();
+        const month = new Date().getUTCMonth() + 1;
+        const day = new Date().getUTCDate();
+        data['date'] = `${day}/${month}/${year} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase()} UTC`; 
+        data['uuid'] = uuidv4();
+        io.sockets.emit('public-retrieve', data);
     });
 
     socket.on('send message', ({ content, to, sender, chatName, isChannel }) => {

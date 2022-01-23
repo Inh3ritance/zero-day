@@ -13,6 +13,8 @@ class App extends React.Component {
 
   constructor(props) {
     super(props);
+    this.form = React.createRef();
+    this.socket = React.createRef();
     this.state = {
       friends: [
         {
@@ -55,22 +57,23 @@ class App extends React.Component {
       hash: null,
       sidebar: false,
       socket: null,
+      uuid: null
     }
     this.listContacts = this.listContacts.bind(this);
     this.getUserInfo = this.getUserInfo.bind(this);
     this.sidebar = this.sidebar.bind(this);
     this.loadMessages = this.loadMessages.bind(this);
-    this.addChatInfo = this.addChatInfo.bind(this);
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.retrievePublicMessages = this.retrievePublicMessages.bind(this);
   }
 
   // get userinfo and connect to socket.io
   async componentDidMount() {
     await this.getUserInfo();
-    const socket = io(url);
-    console.log(this.state.hash);
-    socket.emit('login', { user: this.state.username, pass: this.state.hash });
-    socket.on('updateSocket', (data) => {
+    this.socket = io(url);
+    this.socket.emit('login', { user: this.state.username, pass: this.state.hash });
+    this.socket.on('updateSocket', (data) => {
       this.setState({ socket: data.socket });
     });
     /*if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
@@ -110,6 +113,15 @@ class App extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     if(prevState.selectedUser !== this.state.selectedUser) {
       this.loadMessages(this.state.selectedUser);
+    }
+  }
+
+  retrievePublicMessages() {
+    if(this.state.selectedUser === 'public') {
+      this.socket.on('public-retrieve', (data) => {
+          this.setState({ uuid: data.uuid });
+          console.log(data);
+      });
     }
   }
 
@@ -160,15 +172,13 @@ class App extends React.Component {
           </div>
           <input className="form-control" type="text" placeholder="Search for someone" onChange={(ev)=>this.setState({ searchField: ev.currentTarget.value })} />
         </li>
+        <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Public chat</h4>
+        <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: 'public', sidebar: false }) }><p style={{color:'white'}}>Public chat</p></button>
         <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Direct messages</h4>
         <this.listContacts />
         <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Group chats</h4>
       </ul>
     )
-  }
-
-  addChatInfo() {
-    
   }
 
   listContacts() {
@@ -239,6 +249,17 @@ class App extends React.Component {
     );
   }
 
+  sendMessage(e) {
+    e.preventDefault();
+    if(this.state.selectedUser === 'public' && this.state.message.length > 0 || true) { // send unencrypted message through public channel
+      this.socket.emit('public-send', { message: this.state.message });
+    } else { // encrypt before sending, also check for incoming messages before submition. chat group or individual user
+
+    }
+    this.form.current.reset();
+    this.setState({ message: '' });
+  } 
+
   render() {
     return (
       <div className="window">
@@ -261,9 +282,9 @@ class App extends React.Component {
               <button className='hidden sidebarButton' onClick={() => this.onSetSidebarOpen(true)}>+</button>
               <this.logoIntro />
               <this.loadMessages />
-              <div className="message-bar">
-                <input className="message-bar-input" type='text' placeholder='send a messsage' />
-              </div>
+              <form className="message-bar" onSubmit={(e)=>this.sendMessage(e)} ref={this.form}>
+                <input className="message-bar-input" type='text' onChange={(e)=>{this.setState({ message: e.currentTarget.value })}} placeholder='send a messsage'/>
+              </form>
             </div>
           </div>
         </div>
