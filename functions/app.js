@@ -8,11 +8,11 @@ const Datastore = require('nedb');
 const { instrument } = require('@socket.io/admin-ui');
 const sha512 = require('crypto-js/sha512');
 const helmet = require('helmet');
-const { v4: uuidv4 } = require('uuid')
+const { v4: uuidv4 } = require('uuid');
 let db = new Datastore();
 
 /// create cron job everyday(1 day) for inactive 60 day deletion
-const days = 1000 * 60 * 60 * 24 * 90; // 90 days in milliseconds
+const days = 1000 * 60 * 60 * 24 * 60; // 60 days in milliseconds
 
 const io = socket(server, {
     cors: {
@@ -44,7 +44,7 @@ app.get('/users', (_, res) => {
     });
 });
 
-app.post('/createUser', (req, res) => {
+app.post('/createUser', (req, res) => { // make this more secure
     db.findOne({ _id: req.body.user }, (err, doc) => {
         if(err) console.log(err);
         if(doc === null) {
@@ -65,7 +65,7 @@ app.post('/createUser', (req, res) => {
 
 io.on('connection', (socket) => {
     
-    socket.on('login', (data) => {
+    socket.on('login', (data) => { // improve
         db.findOne({ user: data.user }, (err, doc) => {
             if(err) console.log(err);
             if(sha512(data?.pass).toString() === doc?.pass && doc?.socket) { // || cookie, jwt
@@ -110,8 +110,7 @@ io.on('connection', (socket) => {
         const year = new Date().getUTCFullYear();
         const month = new Date().getUTCMonth() + 1;
         const day = new Date().getUTCDate();
-        data['date'] = `${day}/${month}/${year} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase()} UTC`; 
-        data['uuid'] = uuidv4();
+        data['date'] = `${month}/${day}/${year} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase()} UTC`; 
         io.sockets.emit('public-retrieve', data);
     });
 

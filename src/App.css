@@ -3,6 +3,10 @@
   width: 100%;
 }
 
+.activeRoom {
+  color: green !important;
+}
+
 .pane-sm, .sidebar {
   background-color: #2D2D2D !important;
   width: 20%;

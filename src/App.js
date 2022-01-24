@@ -2,10 +2,13 @@ import './App.css';
 import React from 'react';
 import { io } from 'socket.io-client';
 import { Xor, Rounds } from './Utility';
+import { SecureLink } from "react-secure-link"
 import Sidebar from 'react-sidebar';
 import sha512 from 'crypto-js/sha512';
 import Popup from 'reactjs-popup';
+import Linkify from 'react-linkify';
 import Logo from './logo.svg';
+import default_hidden from './Images/hidden_1.png';
 
 const url = 'http://localhost:9000';
 
@@ -16,7 +19,7 @@ class App extends React.Component {
     this.form = React.createRef();
     this.socket = React.createRef();
     this.state = {
-      friends: [
+      friends: [ // encrypted and saved locally
         {
           username: 'test1',
           image: 'mksms.png',
@@ -36,7 +39,7 @@ class App extends React.Component {
       ],
       searchField: '',
       selectedUser: '',
-      loadedMessages: [
+      loadedMessages: [ // encrypted and saved locally
         {
           user: 'rick',
           message: 'ticky whoicky kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj',
@@ -53,11 +56,10 @@ class App extends React.Component {
           time: '4am'
         },
       ],
-      username: null,
-      hash: null,
+      username: null, // encrypted and saved locally
+      hash: null, // encrypted and saved locally
       sidebar: false,
       socket: null,
-      uuid: null
     }
     this.listContacts = this.listContacts.bind(this);
     this.getUserInfo = this.getUserInfo.bind(this);
@@ -65,7 +67,7 @@ class App extends React.Component {
     this.loadMessages = this.loadMessages.bind(this);
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
-    this.retrievePublicMessages = this.retrievePublicMessages.bind(this);
+    this.selectPublicChat = this.selectPublicChat.bind(this);
   }
 
   // get userinfo and connect to socket.io
@@ -76,6 +78,13 @@ class App extends React.Component {
     this.socket.on('updateSocket', (data) => {
       this.setState({ socket: data.socket });
     });
+    this.socket.on('public-retrieve', (data) => {
+      if(this.state.selectedUser === 'public') {
+        const prev = this.state.loadedMessages;
+        prev.push({ user: 'Anon', message: data.message, time: data.date });
+        this.setState({ loadedMessages: prev });
+      }
+  });
     /*if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
       let db = indexedDB.open('users').result;
       let data = {
@@ -116,24 +125,15 @@ class App extends React.Component {
     }
   }
 
-  retrievePublicMessages() {
-    if(this.state.selectedUser === 'public') {
-      this.socket.on('public-retrieve', (data) => {
-          this.setState({ uuid: data.uuid });
-          console.log(data);
-      });
-    }
-  }
-
   loadMessages() {
     return this.state.loadedMessages.map((chat, index, arr) => {
       if(index === arr.length - 1) {
         return (
           <div className="chatBox" id='last-message'>
-            <img className="img-circle media-object" alt={'user'} src={''} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
+            <img className="img-circle media-object" alt={'user'} src={default_hidden} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
             <div style={{width:'85%', display: 'inline-block', marginLeft: '5px'}}>
               <p className="chat-username">{chat.user}</p>
-              <p className="chat-message">{chat.message}</p>
+              <p><Linkify componentDecorator={(decoratedHref, decoratedText, key) => (<SecureLink href={decoratedHref} key={key}>{decoratedText}</SecureLink>)} className="chat-message">{chat.message}</Linkify></p>
               <p className="chat-time">{chat.time}</p>
             </div>
           </div>
@@ -141,10 +141,10 @@ class App extends React.Component {
       } else {
         return (
           <div className="chatBox">
-            <img className="img-circle media-object" alt={'user'} src={''} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
+            <img className="img-circle media-object" alt={'user'} src={default_hidden} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
             <div style={{width:'85%', display: 'inline-block', marginLeft: '5px'}}>
-            <p className="chat-username">{chat.user}</p>
-              <p className="chat-message">{chat.message}</p>
+              <p className="chat-username">{chat.user}</p>
+              <p><Linkify className="chat-message">{chat.message}</Linkify></p>
               <p className="chat-time">{chat.time}</p>
             </div>
           </div>
@@ -159,6 +159,14 @@ class App extends React.Component {
         <h1 className='title'>We do not listen, we do not hear.</h1>
       </header>
     );
+  } 
+  
+  selectPublicChat() {
+    if(this.state.selectedUser !== 'public') {
+      this.setState({ selectedUser: 'public', sidebar: false, loadedMessages: [] });
+    } else {
+      this.setState({ selectedUser: 'public', sidebar: false });
+    }
   }
 
   sidebar() {
@@ -172,8 +180,8 @@ class App extends React.Component {
           </div>
           <input className="form-control" type="text" placeholder="Search for someone" onChange={(ev)=>this.setState({ searchField: ev.currentTarget.value })} />
         </li>
-        <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Public chat</h4>
-        <button className="sidebarUserButton" onClick={() => this.setState({ selectedUser: 'public', sidebar: false }) }><p style={{color:'white'}}>Public chat</p></button>
+        
+        <button className="sidebarUserButton" onClick={this.selectPublicChat}><h4 className={this.state.selectedUser === 'public' ? 'activeRoom' : ''} style={{color: 'white'}}>Public chat</h4></button>
         <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Direct messages</h4>
         <this.listContacts />
         <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Group chats</h4>
@@ -251,7 +259,7 @@ class App extends React.Component {
 
   sendMessage(e) {
     e.preventDefault();
-    if(this.state.selectedUser === 'public' && this.state.message.length > 0 || true) { // send unencrypted message through public channel
+    if(this.state.selectedUser === 'public' && this.state.message.length > 0) { // send unencrypted message through public channel
       this.socket.emit('public-send', { message: this.state.message });
     } else { // encrypt before sending, also check for incoming messages before submition. chat group or individual user
 
