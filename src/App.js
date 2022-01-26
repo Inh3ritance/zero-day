@@ -1,14 +1,13 @@
 import './App.css';
 import React from 'react';
 import { io } from 'socket.io-client';
-import { Xor, Rounds } from './Utility';
-import { SecureLink } from "react-secure-link"
+import { SecureLink } from 'react-secure-link';
+import { Header, LogoIntro } from './statelessComponents/Components';
 import Sidebar from 'react-sidebar';
-import sha512 from 'crypto-js/sha512';
 import Popup from 'reactjs-popup';
 import Linkify from 'react-linkify';
-import Logo from './logo.svg';
 import default_hidden from './Images/hidden_1.png';
+import userInfo from './Utils/getUserInfo';
 
 const url = 'http://localhost:9000';
 
@@ -57,12 +56,11 @@ class App extends React.Component {
         },
       ],
       username: null, // encrypted and saved locally
-      hash: null, // encrypted and saved locally
+      csrng: null, // encrypted and saved locally
       sidebar: false,
       socket: null,
     }
     this.listContacts = this.listContacts.bind(this);
-    this.getUserInfo = this.getUserInfo.bind(this);
     this.sidebar = this.sidebar.bind(this);
     this.loadMessages = this.loadMessages.bind(this);
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
@@ -72,9 +70,9 @@ class App extends React.Component {
 
   // get userinfo and connect to socket.io
   async componentDidMount() {
-    await this.getUserInfo();
+    this.setState(await userInfo());
     this.socket = io(url);
-    this.socket.emit('login', { user: this.state.username, pass: this.state.hash });
+    this.socket.emit('login', { user: this.state.username, pass: this.state.csrng });
     this.socket.on('updateSocket', (data) => {
       this.setState({ socket: data.socket });
     });
@@ -97,26 +95,6 @@ class App extends React.Component {
         
       );
     }*/
-  }
-
-  // decrypt key w/sessionkey get user data(JSON)
-  async getUserInfo() {
-    const sessionKey = window.sessionStorage.getItem('sessionKey').toString();
-    const appKey = window.localStorage.getItem('appKey').toString();
-    const verifyKey = window.localStorage.getItem('verify').toString();
-    let key = Xor(sessionKey, appKey); // get unencrypted csrng key
-    const firstRound = Rounds(key, 1);
-    let verify = Xor(verifyKey, firstRound);
-    verify = verify.replace(/\/\[EXT:.*\]\//, '');
-    try {
-        verify = JSON.parse(verify);
-        this.setState({
-          username: verify.username,
-          hash: verify.hash,
-        });
-    } catch(err) {
-        console.log(err);
-    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -152,14 +130,6 @@ class App extends React.Component {
       }
     });
   }
-
-  head() {
-    return(
-      <header className='toolbar toolbar-header'>
-        <h1 className='title'>We do not listen, we do not hear.</h1>
-      </header>
-    );
-  } 
   
   selectPublicChat() {
     if(this.state.selectedUser !== 'public') {
@@ -221,15 +191,6 @@ class App extends React.Component {
     });
   }
 
-  logoIntro() {
-    return (
-      <div style={{borderBottom: '1px solid #464646', width: '97%', margin: 'auto'}}>
-        <img alt={'Logo'} src={Logo} className={'logo-image'}></img>
-        <h3 style={{ color: 'white', textAlign:'center', marginBottom: '2%'}}>Secrecy begins here...</h3>
-      </div>
-    );
-  }
-
   onSetSidebarOpen(open) {
     this.setState({ sidebar: open });
   }
@@ -247,9 +208,9 @@ class App extends React.Component {
                 <div className="content">
                   <input className='addUserInput' type={'text'} placeholder='secret key'></input>
                   <input className='addUserInput' type={'text'} placeholder='chatroom #'></input>
-                  <button id='addUserSubmit' onClick={()=>console.log('')}>Submit</button>
+                  <button id='addUserSubmit' onClick={()=>console.log('submit to server')}>Submit</button>
                 </div>      
-          </div>    
+            </div>    
           )
         }
         </Popup>
@@ -271,7 +232,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="window">
-        <this.head />
+        <Header />
         <div className="window-content">
           <div className="pane-group">
             <div className='hidden'>
@@ -288,7 +249,7 @@ class App extends React.Component {
             </div>
             <div className="pane">
               <button className='hidden sidebarButton' onClick={() => this.onSetSidebarOpen(true)}>+</button>
-              <this.logoIntro />
+              <LogoIntro />
               <this.loadMessages />
               <form className="message-bar" onSubmit={(e)=>this.sendMessage(e)} ref={this.form}>
                 <input className="message-bar-input" type='text' onChange={(e)=>{this.setState({ message: e.currentTarget.value })}} placeholder='send a messsage'/>

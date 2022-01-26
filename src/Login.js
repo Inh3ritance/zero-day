@@ -23,12 +23,14 @@ class Login extends React.Component {
 
     // Determine whether a encryption token exists
     componentDidMount() {
-        if(window.sessionStorage.getItem('sessionKey') && window.localStorage.getItem('setPasscode')) {
-            const sessionKey = window.sessionStorage.getItem('sessionKey').toString();
-            const appKey = window.localStorage.getItem('appKey').toString();
+        let sessionKey = window.sessionStorage.getItem('sessionKey');
+        let appKey = window.localStorage.getItem('appKey');
+        if(sessionKey && appKey) {
             const verifyKey = window.localStorage.getItem('verify').toString();
-            let key = Xor(sessionKey, appKey); // get unencrypted csrng key
-            const firstRound = Rounds(key, 1);
+            sessionKey = sessionKey.toString();
+            appKey = appKey.toString();
+            const key = Xor(sessionKey, appKey); // get unencrypted csrng key
+            const firstRound = Rounds(key, 1); // First generation/round
             let verify = Xor(verifyKey, firstRound);
             verify = verify.replace(/\/\[EXT:.*\]\//, '');
             try {
@@ -56,13 +58,15 @@ class Login extends React.Component {
     // submit 4 keys and generate encryption tokens || verify existing encryption token
     submit(e) {
         e.preventDefault();
-        if(window.localStorage.getItem('setPasscode') && this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null) {
-            const sessionKey = sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`).toString();
+        let appKey = window.localStorage.getItem('appKey');
+        if(appKey && this.state.key_code_1 && this.state.key_code_2 && this.state.key_code_3 && this.state.key_code_4) {
+            const sessionHash = sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`);
+            const sessionKey = sessionHash.toString();
             window.sessionStorage.setItem('sessionKey', sessionKey);
-            const appKey = window.localStorage.getItem('appKey').toString();
+            appKey = appKey.toString();
             const verifyKey = window.localStorage.getItem('verify').toString();
             let key = Xor(sessionKey, appKey); // get unencrypted csrng key
-            const firstRound = Rounds(key, 1);
+            const firstRound = Rounds(key, 1); // First generation/round
             let verify = Xor(verifyKey, firstRound);
             verify = verify.replace(/\/\[EXT:.*\]\//, '');
             try {
@@ -79,31 +83,32 @@ class Login extends React.Component {
                     key_code_4: null
                 });
             }
-        } else if(this.state.key_code_1 !== null && this.state.key_code_2 !== null && this.state.key_code_3 !== null && this.state.key_code_4 !== null && this.state.username.length > 3) {
-            const sessionKey = sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`).toString();
-            const csrng = sha512(window.crypto.getRandomValues(new Uint32Array(1))[0].toString()).toString();
-            let key = Xor(csrng, sessionKey);
-            const firstRound = Rounds(csrng, 1); // our rounds are based off the unencrypeted csrng key
-            const hash = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
+        } else if(this.state.key_code_1 && this.state.key_code_2 && this.state.key_code_3 && this.state.key_code_4 && this.state.username.length > 3) {
+            const sessionHash = sha512(`${this.state.key_code_1}${this.state.key_code_2}${this.state.key_code_3}${this.state.key_code_4}`); 
+            const sessionKey = sessionHash.toString();
+            let csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
+            const csrngHash = sha512(csrng).toString();
+            let key = Xor(csrngHash, sessionKey);
+            const firstRound = Rounds(csrngHash, 1); // our rounds are based off the unencrypeted csrng key
+            csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
             let verify = JSON.stringify({
                 verify: true,
-                username: `${this.state.username}#${hash.substring(0,5)}`,
-                hash,
+                username: `${this.state.username}#${csrng.substring(0,5)}`, // visible rng
+                csrng, // stored rng
             });
-            const conformText = ConformPlainText(verify);
+            const conformText = ConformPlainText(verify); // make sure it is 128 chars. long
             const hashedUser = Xor(firstRound, conformText);
             fetch(`${url}/createUser`, {
                 method: "POST",
                 body: JSON.stringify({
-                    user: `${this.state.username}#${hash.substring(0,5)}`,
-                    pass: hash,
+                    user: `${this.state.username}#${csrng.substring(0,5)}`,
+                    pass: csrng,
                 }),
                 headers: {
                     "Content-type": "application/json; charset=UTF-8"
                 }
             }).then(_ => {
                 window.sessionStorage.setItem('sessionKey', sessionKey);
-                window.localStorage.setItem('setPasscode', true);
                 window.localStorage.setItem('appKey', key);
                 window.localStorage.setItem('verify', hashedUser);
                 this.Approve(true);
@@ -154,7 +159,7 @@ class Login extends React.Component {
             <div className='login-screen'>
                 <h1>Zero Day Messaging</h1>
                 {
-                    window.localStorage.getItem('setPasscode') ? null : <input id='username-input' maxLength={12} placeholder='username' type='text' value={this.state.username} onChange={(e)=>{this.setState({username: e.target.value})}}></input>
+                    window.localStorage.getItem('appKey') ? null : <input id='username-input' maxLength={12} placeholder='username' type='text' value={this.state.username} onChange={(e)=>{this.setState({username: e.target.value})}}></input>
                 }
                 <label className='login-label'>Enter Passcode:</label>
                 <div className='input-scores'>
