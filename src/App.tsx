@@ -1,6 +1,5 @@
-import './App.css';
-import React from 'react';
-import { io } from 'socket.io-client';
+import React, { Component, RefObject, createRef, MutableRefObject } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { SecureLink } from 'react-secure-link';
 import { Header, LogoIntro } from './statelessComponents/Components';
 import Sidebar from 'react-sidebar';
@@ -8,15 +7,48 @@ import Popup from 'reactjs-popup';
 import Linkify from 'react-linkify';
 import default_hidden from './Images/hidden_1.png';
 import userInfo from './Utils/getUserInfo';
+import './App.css';
 
-const url = 'http://localhost:9000';
+export const URL = 'http://localhost:9000';
 
-class App extends React.Component {
+// TODO - Friend and Message types should probably be moved to a separate file. Same with URL constant
 
-  constructor(props) {
+interface Friend {
+  username: string;
+  image: string;
+  lastMessage: string;
+  hashKeyPattern: string;
+  active: boolean;
+  newMessages: number;
+}
+
+interface Message {
+  user: string;
+  message: string;
+  time: string;
+}
+
+interface State {
+  socket: Socket | null;
+  username: string | null;
+  sidebar: boolean;
+  csrng: string | null;
+  friends: Friend[];
+  searchField: string;
+  selectedUser: string;
+  verify: boolean;
+  loadedMessages: Message[];
+  message: string;
+}
+
+class App extends Component<{}, State> {
+  form: RefObject<HTMLFormElement>
+  socket: MutableRefObject<Socket | null>
+
+  constructor(props: {}) {
     super(props);
-    this.form = React.createRef();
-    this.socket = React.createRef();
+    this.form = createRef();
+    this.socket = createRef();
     this.state = {
       friends: [ // encrypted and saved locally
         {
@@ -57,9 +89,11 @@ class App extends React.Component {
       ],
       username: null, // encrypted and saved locally
       csrng: null, // encrypted and saved locally
+      verify: false,
       sidebar: false,
       socket: null,
-    }
+      message: '',
+    };
     this.listContacts = this.listContacts.bind(this);
     this.sidebar = this.sidebar.bind(this);
     this.loadMessages = this.loadMessages.bind(this);
@@ -71,12 +105,12 @@ class App extends React.Component {
   // get userinfo and connect to socket.io
   async componentDidMount() {
     this.setState(await userInfo());
-    this.socket = io(url);
-    this.socket.emit('login', { user: this.state.username, pass: this.state.csrng });
-    this.socket.on('updateSocket', (data) => {
+    this.socket.current = io(URL);
+    this.socket.current.emit('login', { user: this.state.username, pass: this.state.csrng });
+    this.socket.current.on('updateSocket', (data) => {
       this.setState({ socket: data.socket });
     });
-    this.socket.on('public-retrieve', (data) => {
+    this.socket.current.on('public-retrieve', (data) => {
       if(this.state.selectedUser === 'public') {
         const prev = this.state.loadedMessages;
         prev.push({ user: 'Anon', message: data.message, time: data.date });
@@ -97,9 +131,9 @@ class App extends React.Component {
     }*/
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(_: State, prevState: State) {
     if(prevState.selectedUser !== this.state.selectedUser) {
-      this.loadMessages(this.state.selectedUser);
+      this.loadMessages();
     }
   }
 
@@ -108,10 +142,27 @@ class App extends React.Component {
       if(index === arr.length - 1) {
         return (
           <div className="chatBox" id='last-message'>
-            <img className="img-circle media-object" alt={'user'} src={default_hidden} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
+            <img
+              className="img-circle media-object"
+              alt={'user'}
+              src={default_hidden}
+              width={'50px'}
+              height={'50px'}
+              style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}
+            />
             <div style={{width:'85%', display: 'inline-block', marginLeft: '5px'}}>
               <p className="chat-username">{chat.user}</p>
-              <p><Linkify componentDecorator={(decoratedHref, decoratedText, key) => (<SecureLink href={decoratedHref} key={key}>{decoratedText}</SecureLink>)} className="chat-message">{chat.message}</Linkify></p>
+              <p>
+                <Linkify
+                  componentDecorator={(decoratedHref, decoratedText, key) => (
+                    <SecureLink href={decoratedHref} key={key}>{decoratedText}</SecureLink>
+                  )}
+                  // @ts-expect-error Linkify doesn't have className defined as a prop, but leave it here for now
+                  className="chat-message"
+                >
+                  {chat.message}
+                </Linkify>
+              </p>
               <p className="chat-time">{chat.time}</p>
             </div>
           </div>
@@ -119,10 +170,20 @@ class App extends React.Component {
       } else {
         return (
           <div className="chatBox">
-            <img className="img-circle media-object" alt={'user'} src={default_hidden} width={'50px'} height={'50px'} style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}></img>
+            <img
+              className="img-circle media-object"
+              alt="user"
+              src={default_hidden}
+              width={'50px'}
+              height={'50px'}
+              style={{ display: 'inline-block', textAlign: 'center', border:'1px solid black', float: 'left', marginLeft: '1%', marginTop: '5px' }}
+            />
             <div style={{width:'85%', display: 'inline-block', marginLeft: '5px'}}>
               <p className="chat-username">{chat.user}</p>
-              <p><Linkify className="chat-message">{chat.message}</Linkify></p>
+              <p>
+                {/* @ts-expect-error Linkify doesn't have className defined as a prop, but leave it here for now */}
+                <Linkify className="chat-message">{chat.message}</Linkify>
+              </p>
               <p className="chat-time">{chat.time}</p>
             </div>
           </div>
@@ -153,7 +214,7 @@ class App extends React.Component {
         
         <button className="sidebarUserButton" onClick={this.selectPublicChat}><h4 className={this.state.selectedUser === 'public' ? 'activeRoom' : ''} style={{color: 'white'}}>Public chat</h4></button>
         <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Direct messages</h4>
-        <this.listContacts />
+        { this.listContacts() }
         <h4 style={{color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey'}}>Group chats</h4>
       </ul>
     )
@@ -191,17 +252,17 @@ class App extends React.Component {
     });
   }
 
-  onSetSidebarOpen(open) {
+  onSetSidebarOpen(open: boolean) {
     this.setState({ sidebar: open });
   }
 
   sidebarNav() {
     return(
       <div>
-        <this.sidebar />
-        <Popup modal position={'center'} trigger={<button className='addUser'>+</button>}>
+        {this.sidebar()}
+        <Popup modal position={'center center'} trigger={<button className='addUser'>+</button>}>
         {
-          close => (
+          (close: React.MouseEventHandler<HTMLButtonElement>) => (
             <div className="modal">
               <button className="close" onClick={close}>&times;</button>
               <h3 style={{ color: 'white', textAlign:'center', borderBottom: '1px solid gray', width: '90%', margin:'auto'}}> Create/Join Chatroom </h3>
@@ -218,14 +279,14 @@ class App extends React.Component {
     );
   }
 
-  sendMessage(e) {
+  sendMessage(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if(this.state.selectedUser === 'public' && this.state.message.length > 0) { // send unencrypted message through public channel
-      this.socket.emit('public-send', { message: this.state.message });
-    } else { // encrypt before sending, also check for incoming messages before submition. chat group or individual user
-
+      this.socket.current?.emit('public-send', { message: this.state.message });
+    } else {
+      // encrypt before sending, also check for incoming messages before submition. chat group or individual user
     }
-    this.form.current.reset();
+    this.form.current?.reset();
     this.setState({ message: '' });
   } 
 
@@ -243,14 +304,12 @@ class App extends React.Component {
               />
             </div>
             <div className="pane-sm sidebar">
-              {
-                this.sidebarNav()
-              }
+              {this.sidebarNav()}
             </div>
             <div className="pane">
               <button className='hidden sidebarButton' onClick={() => this.onSetSidebarOpen(true)}>+</button>
               <LogoIntro />
-              <this.loadMessages />
+              {this.loadMessages()}
               <form className="message-bar" onSubmit={(e)=>this.sendMessage(e)} ref={this.form}>
                 <input className="message-bar-input" type='text' onChange={(e)=>{this.setState({ message: e.currentTarget.value })}} placeholder='send a messsage'/>
               </form>
