@@ -15,21 +15,20 @@ class PageHandler extends React.Component<{}, State> {
     this.approved = this.approved.bind(this);
     this.handlePage = this.handlePage.bind(this);
   }
-  
+
+  handlePage() {
+    if (this.state.approval) {
+      return (<App />);
+    }
+    return (<Login approval={(appr: boolean) => this.approved(appr)} />);
+  }
+
   approved(flag: boolean) {
     this.setState({
       approval: flag,
     });
   }
-  
-  handlePage() {
-    if(this.state.approval) {
-      return (<App />);
-    } else {
-      return (<Login approval={(appr: boolean)=> this.approved(appr)} />);
-    }
-  }
-  
+
   render() {
     return (this.handlePage());
   }

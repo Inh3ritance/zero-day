@@ -772,8 +772,8 @@ img {
 
 @font-face {
   font-family: "photon-entypo";
-  src: url("../fonts/photon-entypo.eot");
-  src: url("../fonts/photon-entypo.eot?#iefix") format("eot"), url("../fonts/photon-entypo.woff") format("woff"), url("../fonts/photon-entypo.ttf") format("truetype");
+  src: url("../assets/fonts/photon-entypo.eot");
+  src: url("../assets/fonts/photon-entypo.eot?#iefix") format("eot"), url("../assets/fonts/photon-entypo.woff") format("woff"), url("../assets/fonts/photon-entypo.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
