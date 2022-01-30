@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PageHandler from './pageHandler';
-import './index.css';
+import './css/index.css';
 import reportWebVitals from './reportWebVitals';
 import './css/photon.css';
 

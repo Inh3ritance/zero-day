@@ -12,7 +12,7 @@ import Linkify from 'react-linkify';
 import { Header, LogoIntro } from './statelessComponents/Components';
 import defaultHidden from './assets/images/hidden_1.png';
 import userInfo from './Utils/getUserInfo';
-import './App.css';
+import './css/App.css';
 
 export const URL = 'http://localhost:9000';
 

@@ -4,7 +4,7 @@ import sha512 from 'crypto-js/sha512';
 import faker from 'faker';
 import { xor, rounds, conformPlainText } from './crypto/utils';
 import { URL } from './App';
-import './Login.css';
+import './css/Login.css';
 
 export const VERIFY_REGEX = /\/\[EXT:.*\]\//;
 
