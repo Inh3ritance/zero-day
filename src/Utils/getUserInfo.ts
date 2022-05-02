@@ -1,5 +1,5 @@
 import { xor, rounds } from '../crypto/utils';
-import { VERIFY_REGEX } from '../Login';
+import { VERIFY_REGEX } from './constants';
 
 interface UserInfo {
     verify: boolean;
@@ -17,7 +17,7 @@ const getUserInfo = async (): Promise<UserInfo> => {
   let verify = xor(verifyKey, firstRound);
   verify = verify.replace(VERIFY_REGEX, '');
   try {
-    const verifyObj: UserInfo = JSON.parse(verify);
+    const verifyObj: UserInfo = JSON.parse(verify || '{}');
     return {
       verify: true,
       username: verifyObj?.username as string || null,
