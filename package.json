@@ -27,8 +27,8 @@
     "jest": "jest --",
     "test": "tsc && npm run lint && jest",
     "eject": "react-scripts eject",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
-    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx . --fix"
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx src",
+    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx src --fix"
   },
   "browserslist": {
     "production": [
