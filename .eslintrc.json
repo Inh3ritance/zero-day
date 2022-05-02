@@ -41,6 +41,7 @@
             }
         ],
         "react/destructuring-assignment": "off",
+        "react/function-component-definition": "off",
         "import/extensions": [
             "error",
             "ignorePackages",
@@ -87,8 +88,7 @@
     ],
     "overrides": [
         {
-          "files": ["*.ts", "*.tsx"],
-    
+          "files": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
           "extends": ["plugin:@typescript-eslint/recommended"],
           "parser": "@typescript-eslint/parser",
           "parserOptions": {

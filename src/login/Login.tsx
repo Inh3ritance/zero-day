@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import sha512 from 'crypto-js/sha512';
 // @ts-ignore - TS doesn't know about faker for some reason
 import faker from 'faker';
-import { xor, rounds, conformPlainText } from './crypto/utils';
-import { URL } from './App';
-import './css/Login.css';
+import { xor, rounds, conformPlainText } from '../crypto/utils';
+import { VERIFY_REGEX } from '../utils/constants';
+import './styles/Login.css';
 
-export const VERIFY_REGEX = /\/\[EXT:.*\]\//;
+const { REACT_APP_BACKEND_URL } = process.env;
 
 interface Props {
   approval: (approved: boolean) => void;
@@ -98,7 +98,7 @@ class Login extends Component<Props, State> {
       });
       const conformText = conformPlainText(verify); // make sure it is 128 chars. long
       const hashedUser = xor(firstRound, conformText);
-      fetch(`${URL}/createUser`, {
+      fetch(`${REACT_APP_BACKEND_URL}/createUser`, {
         method: 'POST',
         body: JSON.stringify({
           user: `${this.state.username}#${csrng.substring(0, 5)}`,
