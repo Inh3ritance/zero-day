@@ -52,6 +52,7 @@
               "tsx": "never"
             }
         ],
+        "import/prefer-default-export": "off",
         "max-len": [
             "error",
             {

@@ -4,12 +4,12 @@ import sha512 from 'crypto-js/sha512';
 import faker from 'faker';
 import { xor, rounds, conformPlainText } from '../crypto/utils';
 import { VERIFY_REGEX } from '../utils/constants';
+import { createUserRequest } from './api';
+import { CREATE_USER_ERROR } from './constants';
 import './styles/Login.css';
 
-const { REACT_APP_BACKEND_URL } = process.env;
-
 interface Props {
-  approval: (approved: boolean) => void;
+  approve: () => void;
 }
 
 interface State {
@@ -25,99 +25,91 @@ class Login extends Component<Props, State> {
       username: faker.name.firstName(),
     };
     this.submit = this.submit.bind(this);
-    this.approve = this.approve.bind(this);
     this.clearKeys = this.clearKeys.bind(this);
     this.registerKey = this.registerKey.bind(this);
   }
 
   // Determine whether a encryption token exists
   componentDidMount() {
-    let sessionKey = window.sessionStorage.getItem('sessionKey');
-    let appKey = window.localStorage.getItem('appKey');
+    const sessionKey = window.sessionStorage.getItem('sessionKey');
+    const appKey = window.localStorage.getItem('appKey');
     if (sessionKey && appKey) { // If both exist, then the user is logged in
-      const verifyKey = window.localStorage.getItem('verify')?.toString() as string;
-      sessionKey = sessionKey.toString();
-      appKey = appKey.toString();
-      const key = xor(sessionKey, appKey); // get unencrypted csrng key
-      const firstRound = rounds(key, 1); // First generation/round
-      let verify = xor(verifyKey, firstRound);
-      verify = verify.replace(VERIFY_REGEX, '');
-      try {
-        verify = JSON.parse(verify);
-        if (verify) {
-          this.approve();
-        }
-      } catch (err) {
-        console.warn('Invalid session --', err);
-        this.setState({ keyCode: [] });
-      }
+      this.login(appKey, sessionKey);
     }
   }
 
-  // pass state up
-  approve() {
-    this.props.approval(true);
+  async createUser() {
+    const { username } = this.state;
+    const { approve } = this.props;
+
+    const sessionHash = sha512(this.state.keyCode.join(''));
+    const sessionKey = sessionHash.toString();
+
+    let csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
+    const csrngHash = sha512(csrng).toString();
+
+    const key = xor(csrngHash, sessionKey);
+    const firstRound = rounds(csrngHash, 1); // our rounds are based off the unencrypeted csrng key
+
+    csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
+
+    const verify = JSON.stringify({
+      verify: true,
+      username: `${this.state.username}#${csrng.substring(0, 5)}`, // visible rng
+      csrng, // stored rng
+    });
+
+    const conformText = conformPlainText(verify); // make sure it is 128 chars. long
+    const hashedUser = xor(firstRound, conformText);
+
+    const { status } = await createUserRequest(username, csrng);
+    if (status === 200) {
+      window.sessionStorage.setItem('sessionKey', sessionKey);
+      window.localStorage.setItem('appKey', key);
+      window.localStorage.setItem('verify', hashedUser);
+      approve();
+    } else {
+      // username taken
+      console.warn(CREATE_USER_ERROR);
+      window.sessionStorage.clear();
+      window.localStorage.clear();
+    }
+  }
+
+  login(appKey: string, sessionKey: string) {
+    const { approve } = this.props;
+
+    const verifyKey = window.localStorage.getItem('verify')?.toString() as string;
+    const key = xor(sessionKey, appKey); // get unencrypted csrng key
+    const firstRound = rounds(key, 1); // First generation/round
+    let verify = xor(verifyKey, firstRound);
+    verify = verify.replace(VERIFY_REGEX, '');
+    try {
+      verify = JSON.parse(verify);
+      if (verify) {
+        approve();
+      }
+    } catch (err) {
+      console.warn('Invalid session --', err);
+      window.sessionStorage.removeItem('sessionKey');
+      this.setState({ keyCode: [] });
+    }
   }
 
   // submit 4 keys and generate encryption tokens || verify existing encryption token
   submit(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault();
-    let appKey = window.localStorage.getItem('appKey');
+
+    const appKey = window.localStorage.getItem('appKey');
+
     if (appKey && this.state.keyCode.length === 4) {
       const sessionHash = sha512(this.state.keyCode.join(''));
       const sessionKey = sessionHash.toString();
       window.sessionStorage.setItem('sessionKey', sessionKey);
-      appKey = appKey.toString();
-      const verifyKey = window.localStorage.getItem('verify')?.toString() || '';
-      const key = xor(sessionKey, appKey); // get unencrypted csrng key
-      const firstRound = rounds(key, 1); // First generation/round
-      let verify = xor(verifyKey, firstRound);
-      verify = verify.replace(VERIFY_REGEX, '');
-      try {
-        verify = JSON.parse(verify);
-        if (verify) {
-          this.approve();
-        }
-      } catch (err) {
-        console.warn('Invalid passcode --', err);
-        window.sessionStorage.removeItem('sessionKey');
-        this.setState({ keyCode: [] });
-      }
+
+      this.login(appKey, sessionKey);
     } else if (this.state.keyCode.length === 4 && this.state.username.length > 3) {
-      const sessionHash = sha512(this.state.keyCode.join(''));
-      const sessionKey = sessionHash.toString();
-      let csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
-      const csrngHash = sha512(csrng).toString();
-      const key = xor(csrngHash, sessionKey);
-      const firstRound = rounds(csrngHash, 1); // our rounds are based off the unencrypeted csrng key
-      csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
-      const verify = JSON.stringify({
-        verify: true,
-        username: `${this.state.username}#${csrng.substring(0, 5)}`, // visible rng
-        csrng, // stored rng
-      });
-      const conformText = conformPlainText(verify); // make sure it is 128 chars. long
-      const hashedUser = xor(firstRound, conformText);
-      fetch(`${REACT_APP_BACKEND_URL}/createUser`, {
-        method: 'POST',
-        body: JSON.stringify({
-          user: `${this.state.username}#${csrng.substring(0, 5)}`,
-          pass: csrng,
-        }),
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8',
-        },
-      }).then((_) => {
-        window.sessionStorage.setItem('sessionKey', sessionKey);
-        window.localStorage.setItem('appKey', key);
-        window.localStorage.setItem('verify', hashedUser);
-        this.approve();
-      }).catch((err) => {
-        console.warn(err);
-        window.sessionStorage.clear();
-        window.localStorage.clear();
-        // username taken
-      });
+      this.createUser();
     } else {
       this.setState({ keyCode: [] });
     }

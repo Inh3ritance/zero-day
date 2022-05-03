@@ -12,25 +12,20 @@ class App extends React.Component<{}, State> {
     this.state = {
       approval: false,
     };
-    this.approved = this.approved.bind(this);
-    this.handlePage = this.handlePage.bind(this);
+    this.approve = this.approve.bind(this);
   }
 
-  handlePage() {
-    if (this.state.approval) {
-      return (<Home />);
-    }
-    return (<Login approval={(appr: boolean) => this.approved(appr)} />);
-  }
-
-  approved(flag: boolean) {
+  approve() {
     this.setState({
-      approval: flag,
+      approval: true,
     });
   }
 
   render() {
-    return (this.handlePage());
+    if (this.state.approval) {
+      return (<Home />);
+    }
+    return (<Login approve={this.approve} />);
   }
 }
 
