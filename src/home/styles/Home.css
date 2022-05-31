@@ -7,11 +7,6 @@
   color: green !important;
 }
 
-.pane-sm, .sidebar {
-  background-color: #2D2D2D !important;
-  width: 20%;
-}
-
 .media-body {
   color: white;
 }
@@ -167,10 +162,10 @@ p, strong {
   margin-bottom: 5%;
 }
 
-.mobileSideBar {
+.sidebar, .pane-sm {
   width: 200px;
   height: 100%;
-  background-color: #1f1f1f;
+  background-color: #1f1f1f !important;
 }
 
 .sidebarButton {
@@ -184,6 +179,7 @@ p, strong {
   width: 25px;
   height: 25px;
   border-right: 2px solid rgb(0, 66, 110);
+  cursor: pointer;
 }
 
 .activeUser {
@@ -198,22 +194,14 @@ p, strong {
   overflow: visible;
 }
 
-@media screen and (width < 550px) {
-  .sidebar {
-    display: none;
-  }
-
-  .pane {
+@media screen and (min-width: 768px) {
+  .pane-sm, .sidebar {
     width: 100%;
-  }
-
-  .message-bar-input {
-    width: 95%;
   }
 }
 
-@media screen and (width > 550px) {
-  .hidden {
-    display: none;
+@media screen and (width < 550px) {
+  .message-bar-input {
+    width: 95%;
   }
 }
