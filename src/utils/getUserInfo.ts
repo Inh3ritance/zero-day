@@ -24,7 +24,7 @@ const getUserInfo = async (): Promise<UserInfo> => {
       csrng: verifyObj?.csrng as string || null,
     };
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return {
       verify: false,
       username: null,
