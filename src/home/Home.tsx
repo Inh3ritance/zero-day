@@ -77,7 +77,7 @@ const Home = () => {
         if (selectedUser === 'public') {
           setLoadedMessages((prev) => [
             ...prev,
-            { user: 'Anon', message: data.message, time: data.date },
+            { user: 'Anon', message: data.message, time: data.datetime },
           ]);
         }
       });
