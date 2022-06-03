@@ -12,7 +12,7 @@ import userInfo from '../utils/getUserInfo';
 import { defaultHomeState, Friend, Message } from './constants';
 import Sidebar from './Sidebar';
 import { useMountEffect } from '../utils/hooks';
-import './styles/Home.css';
+import './styles/Home.scss';
 
 const { REACT_APP_BACKEND_URL } = process.env;
 
