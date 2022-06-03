@@ -2,6 +2,7 @@ import React from 'react';
 import Linkify from 'react-linkify';
 import { SecureLink } from 'react-secure-link';
 import { Message } from './constants';
+import { toLocalDateTimeFromISO } from '../shared/timeHelpers';
 import defaultHidden from '../assets/images/hidden_1.png';
 
 interface Props {
@@ -40,7 +41,7 @@ const Messages = ({ messages }: Props) => (
                     {chat.message}
                   </Linkify>
                 </p>
-                <p className="chat-time">{chat.time}</p>
+                <p className="chat-time">{toLocalDateTimeFromISO(chat.time)}</p>
               </div>
             </div>
           );
