@@ -6,7 +6,7 @@ import { xor, rounds, conformPlainText } from '../crypto/utils';
 import { VERIFY_REGEX } from '../utils/constants';
 import { createUserRequest } from './api';
 import { CREATE_USER_ERROR } from './constants';
-import './styles/Login.css';
+import './styles/Login.scss';
 
 interface Props {
   approve: () => void;
