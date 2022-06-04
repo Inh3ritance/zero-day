@@ -9,40 +9,32 @@ import { Header } from '../shared';
 import LogoIntro from './LogoIntro';
 import Messages from './Messages';
 import userInfo from '../utils/getUserInfo';
-import { defaultHomeState, Friend, Message } from './constants';
+import {
+  Friend,
+  Message,
+  DEFAULT_FRIENDS,
+  DEFAULT_LOADED_MESSAGES,
+} from './constants';
 import Sidebar from './Sidebar';
 import { useMountEffect } from '../utils/hooks';
 import './styles/Home.scss';
 
 const { REACT_APP_BACKEND_URL } = process.env;
 
-export interface State {
-  socket: Socket | null;
-  username: string | null;
-  isSidebarOpen: boolean;
-  csrng: string | null;
-  friends: Friend[];
-  searchField: string;
-  selectedUser: string;
-  verify?: boolean;
-  loadedMessages: Message[];
-  message: string;
-}
-
 const Home = () => {
   const formRef = useRef<HTMLFormElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  const [socket, setSocket] = useState<Socket | null>(defaultHomeState.socket);
-  const [username, setUsername] = useState<string | null>(defaultHomeState.username);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(defaultHomeState.isSidebarOpen);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   // Fixme: `setFriends` isn't being used right now because `friends` is mocked
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [friends, setFriends] = useState<Friend[]>(defaultHomeState.friends);
-  const [searchField, setSearchField] = useState<string>(defaultHomeState.searchField);
-  const [selectedUser, setSelectedUser] = useState<string>(defaultHomeState.selectedUser);
-  const [loadedMessages, setLoadedMessages] = useState<Message[]>(defaultHomeState.loadedMessages);
-  const [message, setMessage] = useState<string>(defaultHomeState.message);
+  const [friends, setFriends] = useState<Friend[]>(DEFAULT_FRIENDS);
+  const [searchField, setSearchField] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [loadedMessages, setLoadedMessages] = useState<Message[]>(DEFAULT_LOADED_MESSAGES);
+  const [message, setMessage] = useState<string>('');
 
   // get user info and connect to socket.io
   useMountEffect(() => {

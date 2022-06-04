@@ -57,6 +57,23 @@ h1 {
     font-size: xx-large;
     text-align: center;
     width: 33%;
+    height: 4rem;
+    background-color: #e2e2e2;
+    border: 1px solid black;
+    
+    &:active {
+        opacity: 70%;
+    }
+
+    &.-clear {
+        background-color: red;
+        color: black;
+    }
+
+    &.-submit {
+        background-color: green;
+        color: white;
+    }
 }
 
 .dial-pad {
