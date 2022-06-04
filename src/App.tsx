@@ -1,32 +1,15 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import Home from './home';
 import Login from './login';
 
-interface State {
-  approval: boolean;
-}
+const App = () => {
+  const [approval, setApproval] = useState(false);
 
-class App extends React.Component<{}, State> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      approval: false,
-    };
-    this.approve = this.approve.bind(this);
-  }
+  const approve = useCallback(() => {
+    setApproval(true);
+  }, [setApproval]);
 
-  approve() {
-    this.setState({
-      approval: true,
-    });
-  }
-
-  render() {
-    if (this.state.approval) {
-      return (<Home />);
-    }
-    return (<Login approve={this.approve} />);
-  }
-}
+  return approval ? <Home /> : <Login approve={approve} />;
+};
 
 export default App;
