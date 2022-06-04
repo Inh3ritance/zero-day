@@ -16,6 +16,8 @@ import {
 } from './constants';
 import Sidebar from './Sidebar';
 import { useMountEffect } from '../utils/hooks';
+import { logout } from '../utils/sessionHelpers';
+import { SOCKET_EVENTS } from '../utils/constants';
 import './styles/Home.scss';
 
 const { REACT_APP_BACKEND_URL } = process.env;
@@ -42,10 +44,11 @@ const Home = () => {
       setUsername(res.username);
 
       socketRef.current = io(REACT_APP_BACKEND_URL || '');
-      socketRef.current.emit('login', { user: res.username, pass: res.csrng });
-      socketRef.current.on('updateSocket', (data) => {
+      socketRef.current.emit(SOCKET_EVENTS.LOGIN, { user: res.username, pass: res.csrng });
+      socketRef.current.on(SOCKET_EVENTS.UPDATE_SOCKET, (data) => {
         setSocket(data.socket);
       });
+      socketRef.current.on(SOCKET_EVENTS.DISCONNECT, logout);
       /* if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
         let db = indexedDB.open('users').result;
         let data = {
@@ -64,7 +67,7 @@ const Home = () => {
 
   useEffect(() => {
     if (socketRef.current) {
-      socketRef.current.on('public-retrieve', (data) => {
+      socketRef.current.on(SOCKET_EVENTS.PUBLIC_RETRIEVE, (data) => {
         if (selectedUser === 'public') {
           setLoadedMessages((prev) => [
             ...prev,
@@ -94,7 +97,7 @@ const Home = () => {
   const sendMessage = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (selectedUser === 'public' && message.length > 0) { // send unencrypted message through public channel
-      socketRef.current?.emit('public-send', { message });
+      socketRef.current?.emit(SOCKET_EVENTS.PUBLIC_SEND, { message });
     } else {
       // TODO: Are we planning to do anything with this else block in the future?
       // encrypt before sending, also check for incoming messages before submition. chat group or individual user

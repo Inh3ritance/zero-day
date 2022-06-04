@@ -1,5 +1,5 @@
 import { xor, rounds } from '../crypto/utils';
-import { VERIFY_REGEX } from './constants';
+import { STORAGE_KEYS, VERIFY_REGEX } from './constants';
 
 interface UserInfo {
     verify: boolean;
@@ -9,9 +9,12 @@ interface UserInfo {
 
 // decrypt key w/sessionkey get user data(JSON)
 const getUserInfo = async (): Promise<UserInfo> => {
-  const sessionKey = window.sessionStorage.getItem('sessionKey')?.toString() || '';
-  const appKey = window.localStorage.getItem('appKey')?.toString() || '';
-  const verifyKey = window.localStorage.getItem('verify')?.toString() || '';
+  const sessionKey = window.sessionStorage
+    .getItem(STORAGE_KEYS.SESSION)?.toString() || '';
+  const appKey = window.localStorage
+    .getItem(STORAGE_KEYS.APP)?.toString() || '';
+  const verifyKey = window.localStorage
+    .getItem(STORAGE_KEYS.VERIFY)?.toString() || '';
   const key = xor(sessionKey, appKey); // get unencrypted csrng key
   const firstRound = rounds(key, 1);
   let verify = xor(verifyKey, firstRound);
