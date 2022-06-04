@@ -4,6 +4,7 @@ import Popup from 'reactjs-popup';
 import { Socket } from 'socket.io-client';
 import { Friend } from './constants';
 import { useMediaQuery } from '../utils/hooks';
+import { COLORS } from '../shared/constants';
 
 interface Props {
   children: React.ReactNode;
@@ -158,6 +159,11 @@ const Sidebar = ({
       open={isOpen}
       docked={!isMobile}
       onSetOpen={onSetOpen}
+      styles={{
+        root: {
+          backgroundColor: COLORS.background,
+        },
+      }}
     >
       <div className="pane-group">
         <div className="pane">

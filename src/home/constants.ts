@@ -36,16 +36,16 @@ export const DEFAULT_LOADED_MESSAGES: Message[] = [ // encrypted and saved local
   {
     user: 'rick',
     message: 'ticky whoicky kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj kjnkjn njkjknj jnkjnkjnjk jknjnjn nkjnj',
-    time: 'UTC',
+    time: '2022-06-04T05:40:29.943Z',
   },
   {
     user: 'rick',
     message: 'schwonk',
-    time: '11pm',
+    time: '2022-06-05T05:40:29.943Z',
   },
   {
     user: 'Inhe',
     message: 'test',
-    time: '4am',
+    time: '2022-06-06T05:40:29.943Z',
   },
 ];

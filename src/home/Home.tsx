@@ -5,7 +5,6 @@ import React, {
   useState,
 } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Header } from '../shared';
 import LogoIntro from './LogoIntro';
 import Messages from './Messages';
 import userInfo from '../utils/getUserInfo';
@@ -109,8 +108,7 @@ const Home = () => {
   }, [setMessage]);
 
   return (
-    <div className="window">
-      <Header />
+    <div className="window" data-testid="Home">
       <div className="window-content">
         <Sidebar
           friends={friends}
@@ -127,11 +125,11 @@ const Home = () => {
           {/* Page content will be wrapped with Sidebar support */}
           <LogoIntro />
           <Messages messages={loadedMessages} />
-          <form className="message-bar" onSubmit={(e) => sendMessage(e)} ref={formRef}>
+          <form className="message-bar" onSubmit={sendMessage} ref={formRef}>
             <input
               className="message-bar-input"
               type="text"
-              onChange={onMessageChange}
+              onInput={onMessageChange}
               placeholder="send a messsage"
             />
           </form>

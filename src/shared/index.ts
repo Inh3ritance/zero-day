@@ -1,6 +1,6 @@
 /* eslint-disable import/prefer-default-export */
-import Header from './Header';
+import TopBar from './TopBar';
 
 export {
-  Header,
+  TopBar,
 };
