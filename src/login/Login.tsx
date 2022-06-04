@@ -14,10 +14,15 @@ interface Props {
 }
 
 const Login = ({ approve }: Props) => {
+  const appKey = window.localStorage.getItem('appKey');
+
   const [keyCode, setKeyCode] = useState<Array<number | null>>([]);
   const [username, setUsername] = useState<string>(faker.name.firstName());
 
-  const login = useCallback((appKey: string, sessionKey: string) => {
+  const login = useCallback((sessionKey: string) => {
+    if (!appKey) {
+      return;
+    }
     const verifyKey = window.localStorage.getItem('verify')?.toString() as string;
     const key = xor(sessionKey, appKey); // get unencrypted csrng key
     const firstRound = rounds(key, 1); // First generation/round
@@ -38,9 +43,8 @@ const Login = ({ approve }: Props) => {
   // Determine whether a encryption token exists
   useMountEffect(() => {
     const sessionKey = window.sessionStorage.getItem('sessionKey');
-    const appKey = window.localStorage.getItem('appKey');
     if (sessionKey && appKey) { // If both exist, then the user is logged in
-      login(appKey, sessionKey);
+      login(sessionKey);
     }
   });
 
@@ -83,14 +87,12 @@ const Login = ({ approve }: Props) => {
   const onSubmit = useCallback((e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
     e.preventDefault();
 
-    const appKey = window.localStorage.getItem('appKey');
-
     if (appKey && keyCode.length === 4) {
       const sessionHash = sha512(keyCode.join(''));
       const sessionKey = sessionHash.toString();
       window.sessionStorage.setItem('sessionKey', sessionKey);
 
-      login(appKey, sessionKey);
+      login(sessionKey);
     } else if (keyCode.length === 4 && username.length > 3) {
       createUser();
     } else {
@@ -125,18 +127,16 @@ const Login = ({ approve }: Props) => {
     <div className="login-screen">
       <h1>Zero Day Messaging</h1>
       {
-        window.localStorage.getItem('appKey')
-          ? null
-          : (
-            <input
-              id="username-input"
-              maxLength={12}
-              placeholder="username"
-              type="text"
-              value={username}
-              onChange={handleUsernameChange}
-            />
-          )
+        appKey && (
+          <input
+            id="username-input"
+            maxLength={12}
+            placeholder="username"
+            type="text"
+            value={username}
+            onChange={handleUsernameChange}
+          />
+        )
       }
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="login-label">Enter Passcode:</label>
