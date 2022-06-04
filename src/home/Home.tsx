@@ -108,7 +108,7 @@ const Home = () => {
   }, [setMessage]);
 
   return (
-    <div className="window">
+    <div className="window" data-testid="Home">
       <div className="window-content">
         <Sidebar
           friends={friends}
