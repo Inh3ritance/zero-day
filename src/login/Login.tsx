@@ -3,7 +3,7 @@ import sha512 from 'crypto-js/sha512';
 // @ts-ignore - TS doesn't know about faker for some reason
 import faker from 'faker';
 import { xor, rounds, conformPlainText } from '../crypto/utils';
-import { VERIFY_REGEX } from '../utils/constants';
+import { STORAGE_KEYS, VERIFY_REGEX } from '../utils/constants';
 import { createUserRequest } from './api';
 import { useMountEffect } from '../utils/hooks';
 import { CREATE_USER_ERROR } from './constants';
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Login = ({ approve }: Props) => {
-  const appKey = window.localStorage.getItem('appKey');
+  const appKey = window.localStorage.getItem(STORAGE_KEYS.APP);
 
   const [keyCode, setKeyCode] = useState<Array<number | null>>([]);
   const [username, setUsername] = useState<string>(faker.name.firstName());
@@ -23,7 +23,9 @@ const Login = ({ approve }: Props) => {
     if (!appKey) {
       return;
     }
-    const verifyKey = window.localStorage.getItem('verify')?.toString() as string;
+    const verifyKey = window.localStorage
+      .getItem(STORAGE_KEYS.VERIFY)
+      ?.toString() as string;
     const key = xor(sessionKey, appKey); // get unencrypted csrng key
     const firstRound = rounds(key, 1); // First generation/round
     let verify = xor(verifyKey, firstRound);
@@ -35,14 +37,14 @@ const Login = ({ approve }: Props) => {
       }
     } catch (err) {
       console.warn('Invalid session --', err);
-      window.sessionStorage.removeItem('sessionKey');
+      window.sessionStorage.removeItem(STORAGE_KEYS.SESSION);
       setKeyCode([]);
     }
   }, [approve, setKeyCode]);
 
   // Determine whether a encryption token exists
   useMountEffect(() => {
-    const sessionKey = window.sessionStorage.getItem('sessionKey');
+    const sessionKey = window.sessionStorage.getItem(STORAGE_KEYS.SESSION);
     if (sessionKey && appKey) { // If both exist, then the user is logged in
       login(sessionKey);
     }
@@ -71,9 +73,9 @@ const Login = ({ approve }: Props) => {
 
     const { status } = await createUserRequest(username, csrng);
     if (status === 200) {
-      window.sessionStorage.setItem('sessionKey', sessionKey);
-      window.localStorage.setItem('appKey', key);
-      window.localStorage.setItem('verify', hashedUser);
+      window.sessionStorage.setItem(STORAGE_KEYS.SESSION, sessionKey);
+      window.localStorage.setItem(STORAGE_KEYS.APP, key);
+      window.localStorage.setItem(STORAGE_KEYS.VERIFY, hashedUser);
       approve();
     } else {
       // username taken
@@ -90,7 +92,7 @@ const Login = ({ approve }: Props) => {
     if (appKey && keyCode.length === 4) {
       const sessionHash = sha512(keyCode.join(''));
       const sessionKey = sessionHash.toString();
-      window.sessionStorage.setItem('sessionKey', sessionKey);
+      window.sessionStorage.setItem(STORAGE_KEYS.SESSION, sessionKey);
 
       login(sessionKey);
     } else if (keyCode.length === 4 && username.length > 3) {
