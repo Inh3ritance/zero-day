@@ -12,7 +12,7 @@ export const SOCKET_EVENTS = {
   CONNECTION: 'connection',
   LOGIN: 'login',
   DISCONNECT: 'disconnect',
-  UPDATE_SOCKET: 'update-socket',
+  UPDATE_SOCKET: 'updateSocket',
   PUBLIC_RETRIEVE: 'public-retrieve',
   PUBLIC_SEND: 'public-send',
   SEND_REQUEST: 'send-request',
