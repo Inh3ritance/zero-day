@@ -29,12 +29,11 @@
             "error",
             2
         ],
+        "linebreak-style": ["error", "windows"],
         "react/jsx-filename-extension": [
             "error",
             {
                 "extensions": [
-                    ".js",
-                    ".jsx",
                     ".ts",
                     ".tsx"
                 ]
@@ -75,8 +74,6 @@
         "import/resolver": {
             "node": {
                 "extensions": [
-                    ".js",
-                    ".jsx",
                     ".ts",
                     ".tsx"
                 ]
@@ -89,7 +86,7 @@
     ],
     "overrides": [
         {
-          "files": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+          "files": ["src/**/*.ts", "src/**/*.tsx"],
           "extends": ["plugin:@typescript-eslint/recommended"],
           "parser": "@typescript-eslint/parser",
           "parserOptions": {
