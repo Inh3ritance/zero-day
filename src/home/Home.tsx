@@ -44,8 +44,6 @@ const Home = () => {
       socketRef.current.on(SOCKET_EVENTS.UPDATE_SOCKET, (data) => {
         setSocket(data.socket);
       });
-      socketRef.current.on(SOCKET_EVENTS.LOGIN, (data) => {
-      });
       socketRef.current.on(SOCKET_EVENTS.DISCONNECT, logout);
       /* if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
         let db = indexedDB.open('users').result;
@@ -107,7 +105,7 @@ const Home = () => {
   const onMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
   }, [setMessage]);
-  
+
   return (
     <div className="window" data-testid="Home">
       <div className="window-content">

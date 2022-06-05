@@ -39,20 +39,20 @@ const Sidebar = ({
   }, [onSetOpen]);
 
   const contactList = useMemo(() => friends.map((user) => (
-        <button
-          className="sidebarUserButton"
-          key={user.username}
-          type="button"
-          onClick={() => selectUser(user.username)}
-        >
-          <li className="list-group-item">
-            <img alt="user" className="img-circle media-object pull-left inActiveUser" src={user.image ?? defaultHidden} width="50px" height="50px" />
-            <div className="media-body">
-              <strong>{user.username}</strong>
-              <p>{user.lastMessage}</p>
-            </div>
-          </li>
-        </button>
+    <button
+      className="sidebarUserButton"
+      key={user.username}
+      type="button"
+      onClick={() => selectUser(user.username)}
+    >
+      <li className="list-group-item">
+        <img alt="user" className="img-circle media-object pull-left inActiveUser" src={user.image ?? defaultHidden} width="50px" height="50px" />
+        <div className="media-body">
+          <strong>{user.username}</strong>
+          <p>{user.lastMessage}</p>
+        </div>
+      </li>
+    </button>
   )), [friends, selectUser]);
 
   const sidebarContent = useMemo(() => (
