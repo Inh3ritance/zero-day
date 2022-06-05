@@ -42,11 +42,9 @@ const Home = () => {
       socketRef.current = io(REACT_APP_BACKEND_URL || '');
       socketRef.current.emit(SOCKET_EVENTS.LOGIN, { user: res.username, pass: res.csrng });
       socketRef.current.on(SOCKET_EVENTS.UPDATE_SOCKET, (data) => {
-        console.log(data);
         setSocket(data.socket);
       });
       socketRef.current.on(SOCKET_EVENTS.LOGIN, (data) => {
-        console.log(data);
       });
       socketRef.current.on(SOCKET_EVENTS.DISCONNECT, logout);
       /* if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
@@ -109,8 +107,7 @@ const Home = () => {
   const onMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
   }, [setMessage]);
-
-  console.log(socket);
+  
   return (
     <div className="window" data-testid="Home">
       <div className="window-content">
