@@ -5,19 +5,18 @@ import { Socket } from 'socket.io-client';
 import { Friend } from './constants';
 import { useMediaQuery } from '../utils/hooks';
 import { COLORS } from '../shared/constants';
+import defaultHidden from '../assets/images/hidden_1.png';
 
 interface Props {
   children: React.ReactNode;
   friends: Friend[];
   isOpen: boolean;
   username: string | null;
-  searchField: string;
   selectedUser: string;
   socket: Socket | null;
   onSetOpen: (open: boolean) => void;
   selectUser: (username: string) => void;
   selectPublicChat: () => void;
-  setSearchFieldValue: (value: string) => void;
 }
 
 // TODO: Reduce prop drilling by introducing some state management
@@ -27,62 +26,34 @@ const Sidebar = ({
   friends,
   isOpen,
   username,
-  searchField,
   selectedUser,
   socket,
   onSetOpen,
   selectPublicChat,
   selectUser,
-  setSearchFieldValue,
 }: Props) => {
   const { isMobile } = useMediaQuery();
-
-  const onSearchFieldChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchFieldValue(e.currentTarget.value);
-  }, [setSearchFieldValue]);
 
   const openSidebar = useCallback(() => {
     onSetOpen(true);
   }, [onSetOpen]);
 
-  const contactList = useMemo(() => friends.map((user) => {
-    if (searchField.length > 0 && user.username.toLowerCase().indexOf(searchField.toLowerCase()) !== -1) {
-      return (
-        <button
-          className="sidebarUserButton"
-          key={user.username}
-          type="button"
-          onClick={() => selectUser(user.username)}
-        >
-          <li className="list-group-item">
-            <img alt="user" className="img-circle media-object pull-left inActiveUser" src={user.image} width="50px" height="50px" />
-            <div className="media-body">
-              <strong>{user.username}</strong>
-              <p>{user.lastMessage}</p>
-            </div>
-          </li>
-        </button>
-      );
-    } if (searchField.length <= 0) {
-      return (
-        <button
-          className="sidebarUserButton"
-          key={user.username}
-          type="button"
-          onClick={() => selectUser(user.username)}
-        >
-          <li className="list-group-item">
-            <img alt="user" className="img-circle media-object pull-left inActiveUser" src={user.image} width="50px" height="50px" />
-            <div className="media-body">
-              <strong>{user.username}</strong>
-              <p>{user.lastMessage}</p>
-            </div>
-          </li>
-        </button>
-      );
-    }
-    return null;
-  }), [friends, searchField, selectUser]);
+  const contactList = useMemo(() => friends.map((user) => (
+    <button
+      className="sidebarUserButton"
+      key={user.username}
+      type="button"
+      onClick={() => selectUser(user.username)}
+    >
+      <li className="list-group-item">
+        <img alt="user" className="img-circle media-object pull-left inActiveUser" src={user.image ?? defaultHidden} width="50px" height="50px" />
+        <div className="media-body">
+          <strong>{user.username}</strong>
+          <p>{user.lastMessage}</p>
+        </div>
+      </li>
+    </button>
+  )), [friends, selectUser]);
 
   const sidebarContent = useMemo(() => (
     <div className="pane-sm sidebar">
@@ -90,7 +61,7 @@ const Sidebar = ({
       <ul key={Math.random()} className="list-group">
         <li className="list-group-header">
           <div>
-            <img className="img-circle media-object activeUser" alt="user" src="" width="50px" height="50px" style={{ margin: 'auto', display: 'block', textAlign: 'center' }} />
+            <img className="img-circle media-object activeUser" alt="user" src={defaultHidden} width="50px" height="50px" style={{ margin: 'auto', display: 'block', textAlign: 'center' }} />
             <h5 style={{
               textAlign: 'center', color: 'white', marginTop: '7px', marginBottom: '7px',
             }}
@@ -104,7 +75,6 @@ const Sidebar = ({
               {`socket #: ${socket}`}
             </h5>
           </div>
-          <input className="form-control" type="text" placeholder="Search for someone" onChange={onSearchFieldChange} />
         </li>
 
         <button className="sidebarUserButton" type="button" onClick={selectPublicChat}>
@@ -122,12 +92,6 @@ const Sidebar = ({
           Direct messages
         </h4>
         {contactList}
-        <h4 style={{
-          color: 'grey', marginLeft: '10px', marginBottom: '5px', marginRight: '10px', borderBottom: '1px solid grey',
-        }}
-        >
-          Group chats
-        </h4>
       </ul>
       <Popup modal position="center center" trigger={<button type="button" className="addUser">+</button>}>
         {
@@ -139,11 +103,11 @@ const Sidebar = ({
               }}
               >
                 {' '}
-                Create/Join Chatroom
+                Add User
               </h3>
               <div className="content">
-                <input className="addUserInput" type="text" placeholder="secret key" />
-                <input className="addUserInput" type="text" placeholder="chatroom #" />
+                <input className="addUserInput" type="text" placeholder="Secret Key" />
+                <input className="addUserInput" type="text" placeholder="Username" />
                 <button id="addUserSubmit" type="button" onClick={() => console.log('submit to server')}>Submit</button>
               </div>
             </div>
@@ -151,7 +115,7 @@ const Sidebar = ({
         }
       </Popup>
     </div>
-  ), [socket, username, contactList, selectedUser, selectPublicChat, selectUser, setSearchFieldValue]);
+  ), [socket, username, contactList, selectedUser, selectPublicChat, selectUser]);
 
   return (
     <ReactSidebar

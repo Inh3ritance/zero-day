@@ -5,14 +5,11 @@ import React, {
   useState,
 } from 'react';
 import { io, Socket } from 'socket.io-client';
-import LogoIntro from './LogoIntro';
 import Messages from './Messages';
 import userInfo from '../utils/getUserInfo';
 import {
   Friend,
   Message,
-  DEFAULT_FRIENDS,
-  DEFAULT_LOADED_MESSAGES,
 } from './constants';
 import Sidebar from './Sidebar';
 import { useMountEffect } from '../utils/hooks';
@@ -31,10 +28,9 @@ const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   // Fixme: `setFriends` isn't being used right now because `friends` is mocked
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [friends, setFriends] = useState<Friend[]>(DEFAULT_FRIENDS);
-  const [searchField, setSearchField] = useState<string>('');
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>('');
-  const [loadedMessages, setLoadedMessages] = useState<Message[]>(DEFAULT_LOADED_MESSAGES);
+  const [loadedMessages, setLoadedMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string>('');
 
   // get user info and connect to socket.io
@@ -122,11 +118,8 @@ const Home = () => {
           selectedUser={selectedUser}
           isOpen={isSidebarOpen}
           onSetOpen={setIsSidebarOpen}
-          searchField={searchField}
-          setSearchFieldValue={setSearchField}
         >
           {/* Page content will be wrapped with Sidebar support */}
-          <LogoIntro />
           <Messages messages={loadedMessages} />
           <form className="message-bar" onSubmit={sendMessage} ref={formRef}>
             <input
