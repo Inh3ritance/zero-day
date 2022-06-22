@@ -6,14 +6,13 @@ import React, {
 } from 'react';
 import { View, TextInput } from 'react-native';
 import { io, Socket } from 'socket.io-client';
-import LogoIntro from './LogoIntro';
 import Messages from './Messages';
 import userInfo from '../utils/getUserInfo';
 import {
-  Friend,
-  Message,
   DEFAULT_FRIENDS,
   DEFAULT_LOADED_MESSAGES,
+  Friend,
+  Message,
 } from './constants';
 import Sidebar from './Sidebar';
 import { useMountEffect } from '../utils/hooks';
@@ -119,7 +118,7 @@ const Home = () => {
           setSearchFieldValue={setSearchField}
         > */}
         {/* Page content will be wrapped with Sidebar support */}
-        <LogoIntro />
+        {/* <LogoIntro /> */}
         <Messages messages={loadedMessages} />
         <View style={styles.messageBarSpacer} />
         <View style={styles.messageBar}>

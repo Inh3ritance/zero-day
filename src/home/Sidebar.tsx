@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import {
-  View, Text, Button, Image, TextInput, TouchableOpacity,
+  View, Text, Button, Image, TouchableOpacity,
 } from 'react-native';
 // import ReactSidebar from 'react-sidebar';
 // import Popup from 'reactjs-popup';
@@ -15,13 +15,11 @@ interface Props {
   friends: Friend[];
   isOpen: boolean;
   username: string | null;
-  searchField: string;
   selectedUser: string;
   socket: Socket | null;
   onSetOpen: (open: boolean) => void;
   selectUser: (username: string) => void;
   selectPublicChat: () => void;
-  setSearchFieldValue: (value: string) => void;
 }
 
 // TODO: Reduce prop drilling by introducing some state management
@@ -31,13 +29,11 @@ const Sidebar = ({
   friends,
   isOpen,
   username,
-  searchField,
   selectedUser,
   socket,
   onSetOpen,
   selectPublicChat,
   selectUser,
-  setSearchFieldValue,
 }: Props) => {
   const { isMobile } = useMediaQuery();
 
@@ -45,56 +41,26 @@ const Sidebar = ({
     onSetOpen(true);
   }, [onSetOpen]);
 
-  const contactList = useMemo(() => friends.map((user) => {
-    if (searchField.length > 0 && user.username.toLowerCase().indexOf(searchField.toLowerCase()) !== -1) {
-      return (
-        <TouchableOpacity
-          style={styles.sidebarUserButton}
-          key={user.username}
-          onPress={() => selectUser(user.username)}
-        >
-          <View style={styles.listGroupItem}>
-            <Image
-              style={[
-                styles.imgCircle,
-                styles.mediaObject,
-                styles.mediaObjectPullLeft,
-                styles.inActiveUser,
-                { width: 50, height: 50 },
-              ]}
-              source={require('../assets/images/hidden_1.png')}
-            />
-            <View>
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>{user.username}</Text>
-              <Text style={{ color: 'white' }}>{user.lastMessage}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
-    } if (searchField.length <= 0) {
-      return (
-        <TouchableOpacity
-          style={styles.sidebarUserButton}
-          key={user.username}
-          onPress={() => selectUser(user.username)}
-        >
-          <View style={styles.listGroupItem}>
-            <Image
-              style={[
-                styles.mediaObjectPullLeft, styles.inActiveUser, { width: 50, height: 50 },
-              ]}
-              source={require('../assets/images/hidden_1.png')}
-            />
-            <View style={styles.mediaBody}>
-              <Text style={{ fontWeight: 'bold' }}>{user.username}</Text>
-              <Text>{user.lastMessage}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
-    }
-    return null;
-  }), [friends, searchField, selectUser]);
+  const contactList = useMemo(() => friends.map((user) => (
+    <TouchableOpacity
+      style={styles.sidebarUserButton}
+      key={user.username}
+      onPress={() => selectUser(user.username)}
+    >
+      <View style={styles.listGroupItem}>
+        <Image
+          style={[
+            styles.mediaObjectPullLeft, styles.inActiveUser, { width: 50, height: 50 },
+          ]}
+          source={require('../assets/images/hidden_1.png')}
+        />
+        <View style={styles.mediaBody}>
+          <Text style={{ fontWeight: 'bold' }}>{user.username}</Text>
+          <Text>{user.lastMessage}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  )), [friends, selectUser]);
 
   const sidebarContent = useMemo(() => (
     <View style={[styles.paneSmall, styles.sidebar]}>
@@ -123,7 +89,6 @@ const Sidebar = ({
               {`socket #: ${socket}`}
             </Text>
           </View>
-          <TextInput style={styles.formControl} placeholder="Search for someone" onChangeText={setSearchFieldValue} />
         </View>
 
         <TouchableOpacity style={styles.sidebarUserButton} onPress={selectPublicChat}>
@@ -157,7 +122,7 @@ const Sidebar = ({
               }}
               >
                 {' '}
-                Create/Join Chatroom
+                Add User
               </h3>
               <div className="content">
                 <input className="addUserInput" type="text" placeholder="secret key" />
@@ -169,7 +134,7 @@ const Sidebar = ({
         }
       </Popup> */}
     </View>
-  ), [socket, username, contactList, selectedUser, selectPublicChat, selectUser, setSearchFieldValue]);
+  ), [socket, username, contactList, selectedUser, selectPublicChat, selectUser]);
 
   return (
     <View
