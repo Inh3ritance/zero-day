@@ -13,6 +13,8 @@ export interface Message {
   time: string;
 }
 
+export const MESSAGE_BAR_HEIGHT = 85;
+
 export const DEFAULT_FRIENDS: Friend[] = [ // encrypted and saved locally
   {
     username: 'test1',

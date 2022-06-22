@@ -1,0 +1,47 @@
+diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/utils.js b/node_modules/react-native-gesture-handler/lib/commonjs/utils.js
+index 39d8252..4588dab 100644
+--- a/node_modules/react-native-gesture-handler/lib/commonjs/utils.js
++++ b/node_modules/react-native-gesture-handler/lib/commonjs/utils.js
+@@ -12,7 +12,7 @@ exports.isFabric = isFabric;
+ exports.shouldUseCodegenNativeComponent = shouldUseCodegenNativeComponent;
+ exports.isRemoteDebuggingEnabled = isRemoteDebuggingEnabled;
+ 
+-var _package = require("react-native/package.json");
++var version = require("react-native/package.json").version;
+ 
+ function toArray(object) {
+   if (!Array.isArray(object)) {
+@@ -59,7 +59,7 @@ function isFabric() {
+ }
+ 
+ function shouldUseCodegenNativeComponent() {
+-  const [majorStr, minorStr] = _package.version.split('.');
++  const [majorStr, minorStr] = version.split('.');
+ 
+   const major = Number.parseInt(majorStr);
+   const minor = Number.parseInt(minorStr); // use codegenNativeComponent starting with RN 0.68
+diff --git a/node_modules/react-native-gesture-handler/lib/module/utils.js b/node_modules/react-native-gesture-handler/lib/module/utils.js
+index eabc4db..43bbfba 100644
+--- a/node_modules/react-native-gesture-handler/lib/module/utils.js
++++ b/node_modules/react-native-gesture-handler/lib/module/utils.js
+@@ -1,4 +1,7 @@
+-import { version as rnVersion } from 'react-native/package.json';
++import packageInfo from 'react-native/package.json';
++
++const { version: rnVersion } = packageInfo;
++
+ export function toArray(object) {
+   if (!Array.isArray(object)) {
+     return [object];
+diff --git a/node_modules/react-native-gesture-handler/src/utils.ts b/node_modules/react-native-gesture-handler/src/utils.ts
+index d24160f..5f4f859 100644
+--- a/node_modules/react-native-gesture-handler/src/utils.ts
++++ b/node_modules/react-native-gesture-handler/src/utils.ts
+@@ -1,4 +1,6 @@
+-import { version as rnVersion } from 'react-native/package.json';
++const packageInfo = require('react-native/package.json');
++
++const { version: rnVersion } = packageInfo;
+ 
+ export function toArray<T>(object: T | T[]): T[] {
+   if (!Array.isArray(object)) {

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { xor, rounds } from '../crypto/utils';
 import { STORAGE_KEYS, VERIFY_REGEX } from './constants';
 
@@ -9,12 +10,15 @@ interface UserInfo {
 
 // decrypt key w/sessionkey get user data(JSON)
 const getUserInfo = async (): Promise<UserInfo> => {
-  const sessionKey = window.sessionStorage
-    .getItem(STORAGE_KEYS.SESSION)?.toString() || '';
-  const appKey = window.localStorage
-    .getItem(STORAGE_KEYS.APP)?.toString() || '';
-  const verifyKey = window.localStorage
-    .getItem(STORAGE_KEYS.VERIFY)?.toString() || '';
+  const values = await AsyncStorage.multiGet([
+    STORAGE_KEYS.SESSION,
+    STORAGE_KEYS.APP,
+    STORAGE_KEYS.VERIFY,
+  ]);
+  const sessionKey = values[0][1] || '';
+  const appKey = values[1][1] || '';
+  const verifyKey = values[2][1] || '';
+  console.log({ sessionKey, appKey, verifyKey });
   const key = xor(sessionKey, appKey); // get unencrypted csrng key
   const firstRound = rounds(key, 1);
   let verify = xor(verifyKey, firstRound);

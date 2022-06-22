@@ -19,3 +19,9 @@ export const SOCKET_EVENTS = {
   SEND_MESSAGE: 'send-message',
   NEW_MESSAGE: 'new-message',
 } as const;
+
+export const MEDIA_QUERY_MAX_WIDTHS = {
+  mobile: 767,
+  tablet: 1024,
+  // Don't need desktop as that's essentially infinity
+} as const;

@@ -1,32 +1,37 @@
 import React, { useCallback, useState } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity, ScrollView,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import sha512 from 'crypto-js/sha512';
 // @ts-ignore - TS doesn't know about faker for some reason
 import faker from 'faker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { xor, rounds, conformPlainText } from '../crypto/utils';
 import { STORAGE_KEYS, VERIFY_REGEX } from '../utils/constants';
 import { createUserRequest } from './api';
 import { useMountEffect } from '../utils/hooks';
 import { CREATE_USER_ERROR } from './constants';
-import './styles/Login.scss';
+import styles from './styles/Login.styles';
 
 interface Props {
   approve: () => void;
 }
 
 const Login = ({ approve }: Props) => {
-  const appKey = window.localStorage.getItem(STORAGE_KEYS.APP);
+  const [appKey, setAppKey] = useState<string | null>(null);
 
   const [keyCode, setKeyCode] = useState<Array<number | null>>([]);
   const [username, setUsername] = useState<string>(faker.name.firstName());
 
-  const login = useCallback((sessionKey: string) => {
-    if (!appKey) {
+  const login = useCallback(async (sessionKey: string) => {
+    const appKeyValue = await AsyncStorage.getItem(STORAGE_KEYS.APP);
+    setAppKey(appKeyValue);
+    if (!appKeyValue) {
       return;
     }
-    const verifyKey = window.localStorage
-      .getItem(STORAGE_KEYS.VERIFY)
-      ?.toString() as string;
-    const key = xor(sessionKey, appKey); // get unencrypted csrng key
+    const verifyKey = await AsyncStorage.getItem(STORAGE_KEYS.VERIFY) || '';
+    const key = xor(sessionKey, appKeyValue); // get unencrypted csrng key
     const firstRound = rounds(key, 1); // First generation/round
     let verify = xor(verifyKey, firstRound);
     verify = verify.replace(VERIFY_REGEX, '');
@@ -37,17 +42,22 @@ const Login = ({ approve }: Props) => {
       }
     } catch (err) {
       console.warn('Invalid session --', err);
-      window.sessionStorage.removeItem(STORAGE_KEYS.SESSION);
+      AsyncStorage.removeItem(STORAGE_KEYS.SESSION);
       setKeyCode([]);
     }
-  }, [approve, setKeyCode]);
+  }, [approve, setAppKey, setKeyCode]);
 
   // Determine whether a encryption token exists
   useMountEffect(() => {
-    const sessionKey = window.sessionStorage.getItem(STORAGE_KEYS.SESSION);
-    if (sessionKey && appKey) { // If both exist, then the user is logged in
-      login(sessionKey);
-    }
+    const init = async () => {
+      const sessionKey = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
+      const appKeyValue = await AsyncStorage.getItem(STORAGE_KEYS.APP);
+      setAppKey(appKeyValue);
+      if (sessionKey && appKeyValue) { // If both exist, then the user is logged in
+        login(sessionKey);
+      }
+    };
+    init();
   });
 
   const createUser = useCallback(async () => {
@@ -73,26 +83,27 @@ const Login = ({ approve }: Props) => {
 
     const { status } = await createUserRequest(username, csrng);
     if (status === 200) {
-      window.sessionStorage.setItem(STORAGE_KEYS.SESSION, sessionKey);
-      window.localStorage.setItem(STORAGE_KEYS.APP, key);
-      window.localStorage.setItem(STORAGE_KEYS.VERIFY, hashedUser);
+      await AsyncStorage.multiSet([
+        [STORAGE_KEYS.SESSION, sessionKey],
+        [STORAGE_KEYS.APP, key],
+        [STORAGE_KEYS.VERIFY, hashedUser],
+      ]);
       approve();
     } else {
       // username taken
       console.warn(CREATE_USER_ERROR);
-      window.sessionStorage.clear();
-      window.localStorage.clear();
+      await AsyncStorage.multiRemove([STORAGE_KEYS.SESSION, STORAGE_KEYS.APP, STORAGE_KEYS.VERIFY]);
     }
   }, [username, approve, keyCode]);
 
   // submit 4 keys and generate encryption tokens || verify existing encryption token
-  const onSubmit = useCallback((e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
-    e.preventDefault();
-
-    if (appKey && keyCode.length === 4) {
+  const onSubmit = useCallback(async () => {
+    const appKeyValue = await AsyncStorage.getItem(STORAGE_KEYS.APP);
+    setAppKey(appKeyValue);
+    if (appKeyValue && keyCode.length === 4) {
       const sessionHash = sha512(keyCode.join(''));
       const sessionKey = sessionHash.toString();
-      window.sessionStorage.setItem(STORAGE_KEYS.SESSION, sessionKey);
+      await AsyncStorage.setItem(STORAGE_KEYS.SESSION, sessionKey);
 
       login(sessionKey);
     } else if (keyCode.length === 4 && username.length > 3) {
@@ -100,13 +111,9 @@ const Login = ({ approve }: Props) => {
     } else {
       setKeyCode([]);
     }
-  }, [keyCode, username, createUser, login, setKeyCode]);
+  }, [keyCode, username, createUser, login, setAppKey, setKeyCode]);
 
-  const handleKeyCodeChange = useCallback((e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
-    e.preventDefault();
-
-    const value = Number(e.currentTarget.value);
-
+  const handleKeyCodeChange = useCallback((value: number) => {
     setKeyCode((prev) => {
       if (prev?.length > 3) { // if we have 4 keys, then we are done
         return prev;
@@ -115,54 +122,80 @@ const Login = ({ approve }: Props) => {
     });
   }, [keyCode, setKeyCode]);
 
-  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value);
-  }, [setUsername]);
-
   // clears keys
-  const clearKeys = useCallback((e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
-    e.preventDefault();
+  const clearKeys = useCallback(() => {
     setKeyCode([]);
   }, [setKeyCode]);
 
+  console.log({ appKey });
+
   return (
-    <div className="login-screen">
-      <h1>Zero Day Messaging</h1>
-      {
-        appKey && (
-          <input
-            id="username-input"
-            maxLength={12}
-            placeholder="username"
-            type="text"
-            value={username}
-            onChange={handleUsernameChange}
-          />
-        )
-      }
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="login-label">Enter Passcode:</label>
-      <div className="input-scores">
-        <h2 className="input-bar">{keyCode[0] === undefined ? '_' : '*' }</h2>
-        <h2 className="input-bar">{keyCode[1] === undefined ? '_' : '*' }</h2>
-        <h2 className="input-bar">{keyCode[2] === undefined ? '_' : '*' }</h2>
-        <h2 className="input-bar">{keyCode[3] === undefined ? '_' : '*' }</h2>
-      </div>
-      <form className="dial-pad">
-        <input className="dial-button" type="button" value={1} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={2} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={3} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={4} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={5} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={6} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={7} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={8} onClick={handleKeyCodeChange} />
-        <input className="dial-button" type="button" value={9} onClick={handleKeyCodeChange} />
-        <input className="dial-button -clear" type="button" value="X" onClick={clearKeys} />
-        <input className="dial-button" type="button" value={0} onClick={handleKeyCodeChange} />
-        <input className="dial-button -submit" type="button" value="T" onClick={onSubmit} />
-      </form>
-    </div>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={{ width: '75%' }}>
+        <Text style={styles.title}>Zero Day Messaging</Text>
+        {
+          !appKey && (
+            <View style={styles.usernameInputContainer}>
+              <TextInput
+                style={styles.usernameInput}
+                maxLength={12}
+                placeholder="Username"
+                value={username}
+                onChangeText={setUsername}
+              />
+            </View>
+          )
+        }
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <Text style={styles.loginLabel}>Enter Passcode:</Text>
+        <View style={styles.passcodeInputContainer}>
+          <Text style={styles.passcodeInput}>{keyCode[0] === undefined ? '_' : '*' }</Text>
+          <Text style={styles.passcodeInput}>{keyCode[1] === undefined ? '_' : '*' }</Text>
+          <Text style={styles.passcodeInput}>{keyCode[2] === undefined ? '_' : '*' }</Text>
+          <Text style={styles.passcodeInput}>{keyCode[3] === undefined ? '_' : '*' }</Text>
+        </View>
+        <View style={styles.dialPadContainer}>
+          <View style={styles.dialPad}>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(1)}>
+              <Text style={styles.dialButton}>1</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(2)}>
+              <Text style={styles.dialButton}>2</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(3)}>
+              <Text style={styles.dialButton}>3</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(4)}>
+              <Text style={styles.dialButton}>4</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(5)}>
+              <Text style={styles.dialButton}>5</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(6)}>
+              <Text style={styles.dialButton}>6</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(7)}>
+              <Text style={styles.dialButton}>7</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(8)}>
+              <Text style={styles.dialButton}>8</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(9)}>
+              <Text style={styles.dialButton}>9</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainerClear} onPress={clearKeys}>
+              <Text style={styles.dialButtonClear}>X</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainer} onPress={() => handleKeyCodeChange(0)}>
+              <Text style={styles.dialButton}>0</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dialButtonContainerSubmit} onPress={onSubmit}>
+              <Text style={styles.dialButtonSubmit}>T</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

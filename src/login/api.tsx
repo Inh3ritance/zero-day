@@ -1,11 +1,9 @@
-const { REACT_APP_BACKEND_URL } = process.env;
-
 export const createUserRequest = async (
   username: string,
   csrng: string,
 ) => {
   try {
-    const { status } = await fetch(`${REACT_APP_BACKEND_URL}/createUser`, {
+    const { status } = await fetch(`${'http://localhost:9000'}/createUser`, {
       method: 'POST',
       body: JSON.stringify({
         user: `${username}#${csrng.substring(0, 5)}`,

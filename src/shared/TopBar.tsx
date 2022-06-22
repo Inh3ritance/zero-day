@@ -1,10 +1,25 @@
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-// Not in use right now but keep in case we need it in the future
+const styles = StyleSheet.create({
+  toolbar: {
+    justifyContent: 'center',
+    minHeight: 22,
+    boxShadow: 'inset 0 1px 0 #f5f4f5',
+    backgroundColor: '#e8e6e8',
+    borderBottomColor: '#red',
+    borderBottomWidth: 1,
+  },
+  title: {
+    marginTop: 1,
+    textAlign: 'center',
+  },
+});
+
 const TopBar = () => (
-  <header className="toolbar toolbar-header">
-    <h1 className="title">We do not listen, we do not hear.</h1>
-  </header>
+  <View style={styles.toolbar}>
+    <Text style={styles.title}>We do not listen, we do not hear.</Text>
+  </View>
 );
 
 export default TopBar;
