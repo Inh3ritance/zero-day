@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import { useColorScheme, useWindowDimensions } from 'react-native';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { MEDIA_QUERY_MAX_WIDTHS } from './constants';
+import type { RootState, AppDispatch } from '../redux/store';
+
+// Use instead of plain `useDispatch` and `useSelector` for correct type inference
+export const useAppDispatch: () => AppDispatch = useDispatch;
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 export const useMountEffect = (callback: () => void) => {
   useEffect(callback, []);

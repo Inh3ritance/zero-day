@@ -47,7 +47,6 @@ const Messages = ({ messages }: Props) => {
       keyExtractor={(item) => item.time}
       renderItem={renderItem}
       onContentSizeChange={scrollToBottom}
-
     />
   );
 };

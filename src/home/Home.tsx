@@ -7,23 +7,26 @@ import React, {
 import { View, TextInput } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import Messages from './Messages';
-import userInfo from '../utils/getUserInfo';
 import {
   DEFAULT_FRIENDS,
   DEFAULT_LOADED_MESSAGES,
   Friend,
   Message,
 } from './constants';
-import Sidebar from './Sidebar';
-import { useMountEffect } from '../utils/hooks';
-import { logout } from '../utils/sessionHelpers';
+
+import { homeActions } from './homeSlice';
+import { appActions, appSelectors } from '../app/appSlice';
+import { useAppDispatch, useAppSelector, useMountEffect } from '../utils/hooks';
+
 import { SOCKET_EVENTS } from '../utils/constants';
 import styles from './styles/Home.styles';
 
 const Home = () => {
+  const dispatch = useAppDispatch();
+  const userInfo = useAppSelector(appSelectors.userInfoSelector);
+
   const socketRef = useRef<Socket | null>(null);
 
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   // Fixme: `setFriends` isn't being used right now because `friends` is mocked
@@ -37,15 +40,16 @@ const Home = () => {
   // get user info and connect to socket.io
   useMountEffect(() => {
     const init = async () => {
-      const res = await userInfo();
-      setUsername(res.username);
+      setUsername(userInfo.username);
 
       socketRef.current = io('http://localhost:9000' || '');
-      socketRef.current.emit(SOCKET_EVENTS.LOGIN, { user: res.username, pass: res.csrng });
-      socketRef.current.on(SOCKET_EVENTS.UPDATE_SOCKET, (data) => {
-        setSocket(data.socket);
+      socketRef.current.emit(SOCKET_EVENTS.LOGIN, { user: userInfo.username, pass: userInfo.csrng });
+      socketRef.current.on(SOCKET_EVENTS.UPDATE_SOCKET, (data: { socket: string }) => {
+        dispatch(homeActions.setSocketNumber(data?.socket));
       });
-      socketRef.current.on(SOCKET_EVENTS.DISCONNECT, logout);
+      socketRef.current.on(SOCKET_EVENTS.DISCONNECT, () => {
+        dispatch(appActions.logout());
+      });
       /* if(indexedDB.open('users').result.objectStoreNames.length <= 0) {
         let db = indexedDB.open('users').result;
         let data = {
@@ -75,24 +79,23 @@ const Home = () => {
     }
   }, [selectedUser, setLoadedMessages, socketRef]);
 
-  const selectUser = useCallback((usernameVal: string) => {
-    setSelectedUser(usernameVal);
-    setIsSidebarOpen(false);
-  }, [setSelectedUser, setIsSidebarOpen]);
+  // const selectUser = useCallback((usernameVal: string) => {
+  //   setSelectedUser(usernameVal);
+  //   setIsSidebarOpen(false);
+  // }, [setSelectedUser, setIsSidebarOpen]);
 
-  const selectPublicChat = useCallback(() => {
-    if (selectedUser !== 'public') {
-      setSelectedUser('public');
-      setIsSidebarOpen(false);
-      setLoadedMessages([]);
-    } else {
-      setSelectedUser('public');
-      setIsSidebarOpen(false);
-    }
-  }, [setSelectedUser, setIsSidebarOpen, setLoadedMessages]);
+  // const selectPublicChat = useCallback(() => {
+  //   if (selectedUser !== 'public') {
+  //     setSelectedUser('public');
+  //     setIsSidebarOpen(false);
+  //     setLoadedMessages([]);
+  //   } else {
+  //     setSelectedUser('public');
+  //     setIsSidebarOpen(false);
+  //   }
+  // }, [setSelectedUser, setIsSidebarOpen, setLoadedMessages]);
 
   const sendMessage = useCallback(() => {
-    console.log({ selectedUser, message });
     if (selectedUser === 'public' && message.length > 0) { // send unencrypted message through public channel
       socketRef.current?.emit(SOCKET_EVENTS.PUBLIC_SEND, { message });
     } else {
@@ -105,20 +108,6 @@ const Home = () => {
   return (
     <View style={styles.window} testID="Home">
       <View style={styles.windowContent}>
-        {/* <Sidebar
-          friends={friends}
-          selectUser={selectUser}
-          selectPublicChat={selectPublicChat}
-          socket={socket}
-          username={username}
-          selectedUser={selectedUser}
-          isOpen={isSidebarOpen}
-          onSetOpen={setIsSidebarOpen}
-          searchField={searchField}
-          setSearchFieldValue={setSearchField}
-        > */}
-        {/* Page content will be wrapped with Sidebar support */}
-        {/* <LogoIntro /> */}
         <Messages messages={loadedMessages} />
         <View style={styles.messageBarSpacer} />
         <View style={styles.messageBar}>
@@ -130,7 +119,6 @@ const Home = () => {
             onSubmitEditing={sendMessage}
           />
         </View>
-        {/* </Sidebar> */}
       </View>
     </View>
   );

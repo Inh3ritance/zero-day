@@ -1,82 +1,62 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text } from 'react-native';
+import React, { Component } from 'react';
+import {
+  View, Text, Platform, Button,
+} from 'react-native';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator, DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 
-// import Icon from 'react-native-vector-icons/FontAwesome';
-import Home from './home';
-import Login from './login';
+import store, { persistor } from './redux/store';
+import RootNavigator from './navigation/RootNavigator';
+import { appActions } from './app/appSlice';
 
-import { useMediaQuery } from './utils/hooks';
+class App extends Component<{}, { didAppCrash: boolean }> {
+  constructor(props: {}) {
+    super(props);
+    this.reloadApp = this.reloadApp.bind(this);
+    this.state = { didAppCrash: false };
+  }
 
-import appJson from './app.json';
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(error, errorInfo);
+    this.setState({ didAppCrash: true });
+  }
 
-const App = () => {
-  const [approval, setApproval] = useState(false);
+  reloadApp() {
+    store.dispatch(appActions.logout());
+    persistor.purge();
+    this.setState({ didAppCrash: false });
+  }
 
-  const approve = useCallback(() => {
-    setApproval(true);
-  }, [setApproval]);
+  render() {
+    const { didAppCrash } = this.state;
 
-  return approval ? <Home /> : <Login approve={approve} />;
-};
+    if (didAppCrash) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Oh no... Something went wrong! :(</Text>
+          <Text>
+            {`Please ${Platform.OS === 'web' ? 'reload the page' : 'restart the app'}, or contact support if it continues to happen.`}
+          </Text>
+          <Button title={Platform.OS === 'web' ? 'Reload' : 'Restart'} onPress={this.reloadApp} />
+        </View>
+      );
+    }
 
-const Drawer = createDrawerNavigator();
+    return (
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            {/* <TopBar /> */}
+            <RootNavigator />
+          </SafeAreaProvider>
+        </PersistGate>
+      </Provider>
+    );
+  }
+}
 
-const CustomDrawerContent = (props: DrawerContentComponentProps) => (
-  <DrawerContentScrollView>
-    {/* Placeholder view for now */}
-    <View style={{ height: 100, width: 500, backgroundColor: 'red' }} />
-  </DrawerContentScrollView>
-);
-
-const DrawerNavigator = () => {
-  const { isDesktop } = useMediaQuery();
-  return (
-    <Drawer.Navigator
-      initialRouteName="App"
-      drawerContent={CustomDrawerContent}
-      // Need the following to fix an issue with the drawer not closing.
-      // https://github.com/react-navigation/react-navigation/issues/10495#issuecomment-1097169259
-      useLegacyImplementation
-      screenOptions={{
-        drawerType: isDesktop ? 'permanent' : 'slide',
-      }}
-    >
-      <Drawer.Screen component={App} key="App" name="App" />
-    </Drawer.Navigator>
-  );
-};
-
-const RootNavigator = () => (
-  <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-    {/* <TopBar /> */}
-    <NavigationContainer
-      linking={{
-        prefixes: ['localhost'],
-        config: {
-          screens: {
-            // Details: 'details',
-            // Linking: 'linking',
-            Home: '*', // Fall back to if no routes match
-          },
-        },
-      }}
-      documentTitle={{
-        formatter: (options, route) => `${appJson.displayName}${
-          options?.title || route?.name
-            ? ` - ${options?.title}` ?? route?.name
-            : ' '
-        }`,
-      }}
-    >
-      <DrawerNavigator />
-    </NavigationContainer>
-  </SafeAreaProvider>
-);
-
-export default RootNavigator;
+export default App;

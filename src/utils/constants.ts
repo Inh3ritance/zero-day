@@ -1,12 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 export const VERIFY_REGEX = /\/\[EXT:.*\]\//;
 
-export const STORAGE_KEYS = {
-  APP: 'appKey',
-  SESSION: 'sessionKey',
-  VERIFY: 'verify',
-} as const;
-
 // Make sure to keep in sync with server
 export const SOCKET_EVENTS = {
   CONNECTION: 'connection',
