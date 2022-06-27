@@ -76,6 +76,8 @@
             "always"
         ],
         "no-use-before-define": "off",
+        "no-param-reassign": "off",
+        "react/jsx-props-no-spreading": "off",
         "global-require": 0,
         "linebreak-style": "off"
     },

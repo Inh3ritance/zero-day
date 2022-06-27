@@ -2,116 +2,75 @@ import React, { useCallback, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import sha512 from 'crypto-js/sha512';
 // @ts-ignore - TS doesn't know about faker for some reason
 import faker from 'faker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { xor, rounds, conformPlainText } from '../crypto/utils';
-import { STORAGE_KEYS, VERIFY_REGEX } from '../utils/constants';
-import { createUserRequest } from './api';
-import { useMountEffect } from '../utils/hooks';
-import { CREATE_USER_ERROR } from './constants';
+import { useSelector } from 'react-redux';
+import { xor, rounds } from '../crypto/utils';
+import { VERIFY_REGEX } from '../utils/constants';
+import { appActions, appSelectors } from '../app/appSlice';
+import { useAppDispatch, useMountEffect } from '../utils/hooks';
 import styles from './styles/Login.styles';
 
-interface Props {
-  approve: () => void;
-}
-
-const Login = ({ approve }: Props) => {
-  const [appKey, setAppKey] = useState<string | null>(null);
+const Login = () => {
+  const dispatch = useAppDispatch();
+  const appKey = useSelector(appSelectors.appKeySelector);
+  const sessionKey = useSelector(appSelectors.sessionKeySelector);
+  const verifyKey = useSelector(appSelectors.verifyKeySelector);
 
   const [keyCode, setKeyCode] = useState<Array<number | null>>([]);
   const [username, setUsername] = useState<string>(faker.name.firstName());
 
-  const login = useCallback(async (sessionKey: string) => {
-    const appKeyValue = await AsyncStorage.getItem(STORAGE_KEYS.APP);
-    setAppKey(appKeyValue);
-    if (!appKeyValue) {
+  const login = useCallback((sessionKeyParam: string) => {
+    if (!appKey) {
       return;
     }
-    const verifyKey = await AsyncStorage.getItem(STORAGE_KEYS.VERIFY) || '';
-    const key = xor(sessionKey, appKeyValue); // get unencrypted csrng key
+    const key = xor(sessionKeyParam, appKey); // get unencrypted csrng key
     const firstRound = rounds(key, 1); // First generation/round
-    let verify = xor(verifyKey, firstRound);
+    let verify = xor(verifyKey || '', firstRound);
     verify = verify.replace(VERIFY_REGEX, '');
     try {
       verify = JSON.parse(verify);
       if (verify) {
-        approve();
+        dispatch(appActions.setSessionKey(sessionKeyParam));
       }
     } catch (err) {
       console.warn('Invalid session --', err);
-      AsyncStorage.removeItem(STORAGE_KEYS.SESSION);
+      dispatch(appActions.setSessionKey(null));
       setKeyCode([]);
     }
-  }, [approve, setAppKey, setKeyCode]);
+  }, [dispatch, appKey, verifyKey, setKeyCode]);
 
-  // Determine whether a encryption token exists
+  // Determine whether an encryption token exists
   useMountEffect(() => {
     const init = async () => {
-      const sessionKey = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
-      const appKeyValue = await AsyncStorage.getItem(STORAGE_KEYS.APP);
-      setAppKey(appKeyValue);
-      if (sessionKey && appKeyValue) { // If both exist, then the user is logged in
+      if (sessionKey && appKey) { // If both exist, then the user is logged in
         login(sessionKey);
       }
     };
     init();
   });
 
-  const createUser = useCallback(async () => {
-    const sessionHash = sha512(keyCode.join(''));
-    const sessionKey = sessionHash.toString();
-
-    let csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
-    const csrngHash = sha512(csrng).toString();
-
-    const key = xor(csrngHash, sessionKey);
-    const firstRound = rounds(csrngHash, 1); // our rounds are based off the unencrypeted csrng key
-
-    csrng = window.crypto.getRandomValues(new Uint32Array(1))[0].toString();
-
-    const verify = JSON.stringify({
-      verify: true,
-      username: `${username}#${csrng.substring(0, 5)}`, // visible rng
-      csrng, // stored rng
-    });
-
-    const conformText = conformPlainText(verify); // make sure it is 128 chars. long
-    const hashedUser = xor(firstRound, conformText);
-
-    const { status } = await createUserRequest(username, csrng);
-    if (status === 200) {
-      await AsyncStorage.multiSet([
-        [STORAGE_KEYS.SESSION, sessionKey],
-        [STORAGE_KEYS.APP, key],
-        [STORAGE_KEYS.VERIFY, hashedUser],
-      ]);
-      approve();
-    } else {
-      // username taken
-      console.warn(CREATE_USER_ERROR);
-      await AsyncStorage.multiRemove([STORAGE_KEYS.SESSION, STORAGE_KEYS.APP, STORAGE_KEYS.VERIFY]);
-    }
-  }, [username, approve, keyCode]);
+  const createUser = useCallback(() => {
+    const keycodeString = keyCode.join('');
+    dispatch(appActions.createUser({ username, keycode: keycodeString }));
+  }, [dispatch, keyCode, username]);
 
   // submit 4 keys and generate encryption tokens || verify existing encryption token
-  const onSubmit = useCallback(async () => {
-    const appKeyValue = await AsyncStorage.getItem(STORAGE_KEYS.APP);
-    setAppKey(appKeyValue);
-    if (appKeyValue && keyCode.length === 4) {
+  const onSubmit = useCallback(() => {
+    if (appKey && keyCode.length === 4) {
       const sessionHash = sha512(keyCode.join(''));
-      const sessionKey = sessionHash.toString();
-      await AsyncStorage.setItem(STORAGE_KEYS.SESSION, sessionKey);
+      const sessionKeyArg = sessionHash.toString();
+      dispatch(appActions.setSessionKey(sessionKeyArg));
 
-      login(sessionKey);
+      login(sessionKeyArg);
     } else if (keyCode.length === 4 && username.length > 3) {
       createUser();
     } else {
       setKeyCode([]);
     }
-  }, [keyCode, username, createUser, login, setAppKey, setKeyCode]);
+  }, [keyCode, username, appKey, createUser, login, setKeyCode]);
 
   const handleKeyCodeChange = useCallback((value: number) => {
     setKeyCode((prev) => {
@@ -126,8 +85,6 @@ const Login = ({ approve }: Props) => {
   const clearKeys = useCallback(() => {
     setKeyCode([]);
   }, [setKeyCode]);
-
-  console.log({ appKey });
 
   return (
     <SafeAreaView style={styles.container}>
